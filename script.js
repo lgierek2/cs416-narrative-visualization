@@ -1,10 +1,19 @@
-let dataScenes = [
-    [10, 20, 30, 40, 50], // Test data for Total Cases
-    [5, 15, 25, 35, 45],  // Test data for Total Deaths
-    [2, 12, 22, 32, 42]    // Test data for Counts
-];
-
+let dataScenes = [];
 let currentScene = 0;
+
+d3.csv("data.csv").then(data => {
+    data.forEach(d => {
+        d.cases = +d.cases;
+        d.deaths = +d.deaths;
+        d.date = new Date(d.date);
+    });
+
+    dataScenes.push(data.map(d => d.cases)); // Total cases
+    dataScenes.push([5, 15, 25, 35, 45]); // Fake data for Total Deaths
+    dataScenes.push([2, 12, 22, 32, 42]); // Fake data for Counts
+
+    renderScene(currentScene);
+});
 
 function renderScene(sceneIndex) {
     const svg = d3.select("#visualization").html("").append("svg")
