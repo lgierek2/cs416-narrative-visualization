@@ -1,0 +1,35 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narrative Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-annotation"></script>
+    <script src="https://unpkg.com/topojson-client"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #visualization {
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+        }
+        .button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="visualization"></div>
+    <div class="button" id="nextButton">Next Scene</div>
+    <script src="script.js"></script>
+</body>
+</html>
