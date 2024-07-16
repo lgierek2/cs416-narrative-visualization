@@ -1,19 +1,10 @@
-let dataScenes = [];
+let dataScenes = [
+    [10, 20, 30, 40, 50], // Test data for Total Cases
+    [5, 15, 25, 35, 45],  // Test data for Total Deaths
+    [2, 12, 22, 32, 42]    // Test data for Counts
+];
+
 let currentScene = 0;
-
-d3.csv("data.csv").then(data => {
-    data.forEach(d => {
-        d.cases = +d.cases;
-        d.deaths = +d.deaths;
-        d.date = new Date(d.date);
-    });
-
-    dataScenes.push(data.map(d => d.cases));
-    dataScenes.push(data.map(d => d.deaths));
-    dataScenes.push(data.map((d, i) => ({ index: i, cases: d.cases, deaths: d.deaths })));
-
-    renderScene(currentScene);
-});
 
 function renderScene(sceneIndex) {
     const svg = d3.select("#visualization").html("").append("svg")
@@ -60,7 +51,7 @@ function renderScene(sceneIndex) {
         .attr("y", 10)
         .attr("x", 0 - (200 / 2))
         .attr("text-anchor", "middle")
-        .text(sceneIndex === 0 || sceneIndex === 1 ? "Counts" : "Counts");
+        .text("Counts");
 }
 
 document.getElementById("nextButton").onclick = function() {
@@ -74,3 +65,5 @@ document.getElementById("prevButton").onclick = function() {
     renderScene(currentScene);
     document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
 };
+
+renderScene(currentScene);
