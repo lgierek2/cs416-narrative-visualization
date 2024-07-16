@@ -5,35 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Narrative Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/d3-annotation"></script>
-    <script src="https://unpkg.com/topojson-client"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        .bar {
+            fill: steelblue;
         }
-        #visualization {
-            width: 800px;
-            height: 600px;
-            margin: 0 auto;
-        }
-        .button {
-            display: block;
-            width: 200px;
-            margin: 20px auto;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            text-align: center;
-            cursor: pointer;
+        .axis--x path,
+        .axis--x line {
+            display: none;
         }
     </style>
 </head>
-<header>
-    Testing
-</header>
 <body>
+    <h1>Narrative Visualization Project</h1>
     <div id="visualization"></div>
-    <div class="button" id="nextButton">Next Scene</div>
-    <script src="script.js"></script>
+    <button id="nextButton">Next Scene</button>
+
+    <script>
+        let currentScene = 0;
+
+        const scenes = [
+            () => {
+                d3.select("#visualization").html(""); 
+                const data = [30, 80, 45, 60, 20, 90, 100];
+
+                const svg = d3.select("#visualization").append("svg")
+                    .attr("width", 400)
+                    .attr("height", 200);
+
+                const x = d3.scaleBand()
+                    .domain(data.map((d, i) => i))
+                    .range([0, 400])
+                    .padding(0.1);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data)])
+                    .range([200, 0]);
+
+                svg.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d, i) => x(i))
+                    .attr("y", d => y(d))
+                    .attr("width", x.bandwidth())
+                    .attr("height", d => 200 - y(d));
+            },
+            () => {
+                d3.select("#visualization").html(""); 
+                const data = [50, 20, 100, 40, 60];
+
+                const svg = d3.select("#visualization").append("svg")
+                    .attr("width", 400)
+                    .attr("height", 200);
+
+                const x = d3.scaleBand()
+                    .domain(data.map((d, i) => i))
+                    .range([0, 400])
+                    .padding(0.1);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data)])
+                    .range([200, 0]);
+
+                svg.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", (d, i) => x(i))
+                    .attr("y", d => y(d))
+                    .attr("width", x.bandwidth())
+                    .attr("height", d => 200 - y(d));
+            }
+        ];
+
+        const updateScene = () => {
+            if (currentScene < scenes.length) {
+                scenes[currentScene]();
+                currentScene++;
+            }
+        };
+
+        document.getElementById("nextButton").addEventListener("click", updateScene);
+    </script>
 </body>
 </html>
