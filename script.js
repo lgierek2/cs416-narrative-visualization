@@ -1,50 +1,34 @@
-let data = [];
-let currentScene = 0;
-
-d3.csv("data.csv").then(csvData => {
-    data = csvData.map(d => ({
-        date: new Date(d.date),
-        cases: +d.cases,
-        deaths: +d.deaths
-    }));
-
-    renderScene(currentScene);
-});
-
 function renderScene(sceneIndex) {
     const svg = d3.select("#visualization").html("").append("svg")
         .attr("width", 400)
         .attr("height", 200);
 
-    let sceneData;
-    let yLabel;
+    let currentData;
 
-    switch (sceneIndex) {
-        case 0:
-            sceneData = data.map(d => d.cases); // Total cases
-            yLabel = "Total Cases";
-            break;
-        case 1:
-            sceneData = data.map(d => d.deaths); // Total deaths
-            yLabel = "Total Deaths";
-            break;
-        case 2:
-            sceneData = data.map((d, i) => ({ index: i, cases: d.cases, deaths: d.deaths })); // Comparison
-            yLabel = "Counts";
-            break;
+    if (sceneIndex === 0) {
+        currentData = data.map(d => +d.cases); // Total cases
+        console.log("First 5 Cases:", data.slice(0, 5)); // Log first 5 rows
+    } else if (sceneIndex === 1) {
+        currentData = data.map(d => +d.deaths); // Total deaths
+        console.log("First 5 Deaths:", data.slice(0, 5)); // Log first 5 rows
+    } else {
+        currentData = data.map(d => +d.cases + +d.deaths); // Counts
+        console.log("First 5 Counts:", data.slice(0, 5)); // Log first 5 rows
     }
 
+    const yLabel = sceneLabels[sceneIndex];
+
     const x = d3.scaleBand()
-        .domain(sceneData.map((_, i) => i))
+        .domain(currentData.map((_, i) => i))
         .range([0, 400])
         .padding(0.1);
 
     const y = d3.scaleLinear()
-        .domain([0, d3.max(sceneData)])
+        .domain([0, d3.max(currentData)])
         .range([200, 0]);
 
     svg.selectAll(".bar")
-        .data(sceneData)
+        .data(currentData)
         .enter().append("rect")
         .attr("class", "bar")
         .attr("x", (d, i) => x(i))
@@ -75,17 +59,3 @@ function renderScene(sceneIndex) {
         .attr("text-anchor", "middle")
         .text("Counts");
 }
-
-document.getElementById("nextButton").onclick = function() {
-    currentScene = (currentScene + 1) % 3;
-    renderScene(currentScene);
-    document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
-};
-
-document.getElementById("prevButton").onclick = function() {
-    currentScene = (currentScene - 1 + 3) % 3;
-    renderScene(currentScene);
-    document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
-};
-
-renderScene(currentScene);
