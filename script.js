@@ -3,7 +3,6 @@ d3.csv("data.csv").then(data => {
         d.date = d3.timeParse("%m/%d/%Y")(d.date);
         d.cases = +d.cases; 
         d.deaths = +d.deaths; 
-        d.state = d.state; 
     });
 
     let currentScene = 0;
@@ -11,11 +10,11 @@ d3.csv("data.csv").then(data => {
     const scenes = [
         {
             title: "Total Cases Over Time",
-            render: () => renderTotalCases(data)
+            render: () => renderLineChart(data, "cases", "Total Cases", "steelblue")
         },
         {
             title: "Total Deaths Over Time",
-            render: () => renderTotalDeaths(data)
+            render: () => renderLineChart(data, "deaths", "Total Deaths", "red")
         },
         {
             title: "Comparison of Cases and Deaths",
@@ -41,144 +40,71 @@ d3.csv("data.csv").then(data => {
 
     function renderScene() {
         d3.select("#visualization").html("");
-
         scenes[currentScene].render();
-
         document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
         document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
-
         d3.select("#visualization")
             .append("h2")
             .text(scenes[currentScene].title);
     }
 
-    function renderTotalCases(data) {
-        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-
+    function renderLineChart(data, type, title, color) {
+        const svg = setupSVG();
         const x = d3.scaleTime()
             .domain(d3.extent(data, d => d.date))
-            .range([margin.left, width - margin.right]);
+            .range([0, svg.width]);
 
         const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.cases)])
-            .range([height - margin.bottom, margin.top]);
+            .domain([0, d3.max(data, d => d[type])])
+            .range([svg.height, 0]);
 
         svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("transform", `translate(0,${svg.height})`)
             .call(d3.axisBottom(x));
 
         svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
             .call(d3.axisLeft(y));
 
         svg.append("text")
             .attr("text-anchor", "end")
-            .attr("x", width - margin.right)
-            .attr("y", height - margin.bottom + 30)
+            .attr("x", svg.width)
+            .attr("y", svg.height + 30)
             .text("Date");
 
         svg.append("text")
             .attr("text-anchor", "end")
             .attr("transform", "rotate(-90)")
-            .attr("y", margin.left - 40)
-            .attr("x", -margin.top)
-            .text("Total Cases");
+            .attr("y", -40)
+            .text(title);
 
         svg.append("path")
             .datum(data)
             .attr("fill", "none")
-            .attr("stroke", "steelblue")
+            .attr("stroke", color)
             .attr("stroke-width", 1.5)
             .attr("d", d3.line()
                 .x(d => x(d.date))
-                .y(d => y(d.cases))
-            );
-    }
-
-    function renderTotalDeaths(data) {
-        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-
-        const x = d3.scaleTime()
-            .domain(d3.extent(data, d => d.date))
-            .range([margin.left, width - margin.right]);
-
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.deaths)])
-            .range([height - margin.bottom, margin.top]);
-
-        svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x));
-
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y));
-
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", width - margin.right)
-            .attr("y", height - margin.bottom + 30)
-            .text("Date");
-
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(-90)")
-            .attr("y", margin.left - 40)
-            .attr("x", -margin.top)
-            .text("Total Deaths");
-
-        svg.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "red")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.deaths))
+                .y(d => y(d[type]))
             );
     }
 
     function renderComparison(data) {
-        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-
+        const svg = setupSVG();
         const x = d3.scaleBand()
             .domain(data.map(d => d.date))
-            .range([margin.left, width - margin.right])
+            .range([0, svg.width])
             .padding(0.1);
 
         const y = d3.scaleLinear()
             .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
-            .range([height - margin.bottom, margin.top]);
+            .range([svg.height, 0]);
 
         svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("transform", `translate(0,${svg.height})`)
             .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d/%Y")));
 
         svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
             .call(d3.axisLeft(y));
-
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", width - margin.right)
-            .attr("y", height - margin.bottom + 30)
-            .text("Date");
-
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(-90)")
-            .attr("y", margin.left - 40)
-            .attr("x", -margin.top)
-            .text("Count");
 
         svg.selectAll(".bar.cases")
             .data(data)
@@ -187,7 +113,7 @@ d3.csv("data.csv").then(data => {
             .attr("x", d => x(d.date))
             .attr("y", d => y(d.cases))
             .attr("width", x.bandwidth() / 2)
-            .attr("height", d => height - margin.bottom - y(d.cases))
+            .attr("height", d => svg.height - y(d.cases))
             .attr("fill", "steelblue");
 
         svg.selectAll(".bar.deaths")
@@ -197,7 +123,21 @@ d3.csv("data.csv").then(data => {
             .attr("x", d => x(d.date) + x.bandwidth() / 2)
             .attr("y", d => y(d.deaths))
             .attr("width", x.bandwidth() / 2)
-            .attr("height", d => height - margin.bottom - y(d.deaths))
+            .attr("height", d => svg.height - y(d.deaths))
             .attr("fill", "red");
+    }
+
+    function setupSVG() {
+        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
+        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+
+        return {
+            svg: svg,
+            width: width,
+            height: height,
+            margin: margin
+        };
     }
 });
