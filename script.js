@@ -58,26 +58,26 @@ d3.csv("us-states.csv").then(data => {
             .domain([0, d3.max(data, d => d[type])])
             .range([svg.height, 0]);
 
-        svg.append("g")
+        svg.svg.append("g")
             .attr("transform", `translate(0,${svg.height})`)
             .call(d3.axisBottom(x));
 
-        svg.append("g")
+        svg.svg.append("g")
             .call(d3.axisLeft(y));
 
-        svg.append("text")
+        svg.svg.append("text")
             .attr("text-anchor", "end")
             .attr("x", svg.width)
             .attr("y", svg.height + 30)
             .text("Date");
 
-        svg.append("text")
+        svg.svg.append("text")
             .attr("text-anchor", "end")
             .attr("transform", "rotate(-90)")
             .attr("y", -40)
             .text(title);
 
-        svg.append("path")
+        svg.svg.append("path")
             .datum(data)
             .attr("fill", "none")
             .attr("stroke", color)
@@ -99,14 +99,14 @@ d3.csv("us-states.csv").then(data => {
             .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
             .range([svg.height, 0]);
 
-        svg.append("g")
+        svg.svg.append("g")
             .attr("transform", `translate(0,${svg.height})`)
             .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d/%Y")));
 
-        svg.append("g")
+        svg.svg.append("g")
             .call(d3.axisLeft(y));
 
-        svg.selectAll(".bar.cases")
+        svg.svg.selectAll(".bar.cases")
             .data(data)
             .enter().append("rect")
             .attr("class", "bar cases")
@@ -116,7 +116,7 @@ d3.csv("us-states.csv").then(data => {
             .attr("height", d => svg.height - y(d.cases))
             .attr("fill", "steelblue");
 
-        svg.selectAll(".bar.deaths")
+        svg.svg.selectAll(".bar.deaths")
             .data(data)
             .enter().append("rect")
             .attr("class", "bar deaths")
@@ -132,6 +132,8 @@ d3.csv("us-states.csv").then(data => {
         const margin = { top: 20, right: 30, bottom: 40, left: 60 };
         const width = +svg.attr("width") - margin.left - margin.right;
         const height = +svg.attr("height") - margin.top - margin.bottom;
+
+        svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
         return {
             svg: svg,
