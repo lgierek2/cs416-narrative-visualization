@@ -141,4 +141,3 @@ d3.csv("us-states.csv").then(data => {
         };
     }
 });
-
