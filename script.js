@@ -1,4 +1,4 @@
-d3.csv("data.csv").then(data => {
+d3.csv("us-states.csv").then(data => {
     data.forEach(d => {
         d.date = d3.timeParse("%m/%d/%Y")(d.date);
         d.cases = +d.cases; 
