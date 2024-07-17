@@ -1,15 +1,13 @@
-// Load the data
 d3.csv("data.csv").then(data => {
-    // Parse the data
     data.forEach(d => {
-        d.date = d3.timeParse("%m/%d/%Y")(d.date); // Parse date
-        d.cases = +d.cases; // Convert cases to number
-        d.deaths = +d.deaths; // Convert deaths to number
+        d.date = d3.timeParse("%m/%d/%Y")(d.date);
+        d.cases = +d.cases; 
+        d.deaths = +d.deaths; 
+        d.state = d.state; 
     });
 
     let currentScene = 0;
 
-    // Define scenes
     const scenes = [
         {
             title: "Total Cases Over Time",
@@ -25,10 +23,8 @@ d3.csv("data.csv").then(data => {
         }
     ];
 
-    // Render the first scene
     renderScene();
 
-    // Button event listeners
     document.getElementById("prevButton").addEventListener("click", () => {
         if (currentScene > 0) {
             currentScene--;
@@ -44,17 +40,13 @@ d3.csv("data.csv").then(data => {
     });
 
     function renderScene() {
-        // Clear the visualization area
         d3.select("#visualization").html("");
 
-        // Render the current scene
         scenes[currentScene].render();
 
-        // Update button visibility
         document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
         document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
 
-        // Add title
         d3.select("#visualization")
             .append("h2")
             .text(scenes[currentScene].title);
