@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Narrative Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        #content {
-            margin-bottom: 20px;
+        .bar {
+            fill: steelblue;
+        }
+        .axis--x path,
+        .axis--x line {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="content"></div>
-    <div id="date-list"></div> <!-- Container for the date list -->
-    <button id="prev">Previous</button>
-    <button id="next">Next</button>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3-annotation.susielu.com/d3-annotation.min.js"></script>
+    <h1>Narrative Visualization Project</h1>
+    <div id="visualization"></div>
+    <button id="prevButton" style="display:none;">Previous Scene</button>
+    <button id="nextButton">Next Scene</button>
+
     <script src="script.js"></script>
-</body>
-</html>
