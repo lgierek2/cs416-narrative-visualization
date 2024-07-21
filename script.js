@@ -76,83 +76,103 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
             .text(scenes[currentScene].title);
     }
 
-    function renderTotalCases(data) {
-        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-        const x = d3.scaleTime()
-            .domain(d3.extent(data, d => d.date))
-            .range([margin.left, width - margin.right]);
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.cases)])
-            .range([height - margin.bottom, margin.top]);
-        svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x));
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y));
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", width - margin.right)
-            .attr("y", height - margin.bottom + 30)
-            .text("Date");
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(-90)")
-            .attr("y", margin.left - 40)
-            .attr("x", -margin.top)
-            .text("Total Cases");
-        svg.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "steelblue")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.cases))
-            );
-    }
+// Function to render total cases over time
+function renderTotalCases(data) {
+    const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
+    const margin = { top: 20, right: 30, bottom: 80, left: 60 }; // Adjust bottom margin for axis labels
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
 
-    function renderTotalDeaths(data) {
-        const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-        const x = d3.scaleTime()
-            .domain(d3.extent(data, d => d.date))
-            .range([margin.left, width - margin.right]);
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.deaths)])
-            .range([height - margin.bottom, margin.top]);
-        svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x));
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y));
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("x", width - margin.right)
-            .attr("y", height - margin.bottom + 30)
-            .text("Date");
-        svg.append("text")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(-90)")
-            .attr("y", margin.left - 40)
-            .attr("x", -margin.top)
-            .text("Total Deaths");
-        svg.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "red")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.deaths))
-            );
-    }
+    const x = d3.scaleTime()
+        .domain(d3.extent(data, d => d.date))
+        .range([margin.left, width - margin.right]);
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.cases)])
+        .range([height - margin.bottom, margin.top]);
+
+    const xAxis = d3.axisBottom(x)
+        .ticks(d3.timeMonth.every(1))
+        .tickFormat(d3.timeFormat("%b %Y")); // Month abbreviation and year
+
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
+
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", width - margin.right)
+        .attr("y", height - margin.bottom + 40) // Adjust for label space
+        .text("Date");
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", margin.left - 50) // Adjust for label space
+        .attr("x", -margin.top)
+        .text("Total Cases");
+
+    svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.cases))
+        );
+}
+
+// Function to render total deaths over time
+function renderTotalDeaths(data) {
+    const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
+    const margin = { top: 20, right: 30, bottom: 80, left: 60 }; // Adjust bottom margin for axis labels
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
+
+    const x = d3.scaleTime()
+        .domain(d3.extent(data, d => d.date))
+        .range([margin.left, width - margin.right]);
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.deaths)])
+        .range([height - margin.bottom, margin.top]);
+
+    const xAxis = d3.axisBottom(x)
+        .ticks(d3.timeMonth.every(1))
+        .tickFormat(d3.timeFormat("%b %Y")); // Month abbreviation and year
+
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
+
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", width - margin.right)
+        .attr("y", height - margin.bottom + 40) // Adjust for label space
+        .text("Date");
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", margin.left - 50) // Adjust for label space
+        .attr("x", -margin.top)
+        .text("Total Deaths");
+
+    svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.deaths))
+        );
+}
 
     function renderComparison(data) {
         const selectedState = d3.select("#stateFilter").property("value");
