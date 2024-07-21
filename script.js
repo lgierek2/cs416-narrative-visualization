@@ -6,12 +6,8 @@ const scenes = [
 
 let currentSceneIndex = 0;
 
-d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
-    data.forEach(d => {
-        d.date = new Date(d.date);
-        d.cases = +d.cases;
-        d.deaths = +d.deaths;
-    });
+d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv");
+
 
     function renderScene(index) {
         d3.select("#content").html("");
