@@ -10,16 +10,9 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
     });
 
     let currentScene = 0;
+
     // Get unique states
     const states = Array.from(new Set(data.map(d => d.state)));
-
-    // Populate the dropdown with state options
-    const stateFilter = d3.select("#stateFilter");
-    stateFilter.selectAll("option")
-        .data(states)
-        .enter().append("option")
-        .attr("value", d => d)
-        .text(d => d);
 
     // Define scenes
     const scenes = [
@@ -70,7 +63,18 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
         document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
         // Show/hide dropdown based on scene
-        document.getElementById("stateFilter").style.display = currentScene === 2 ? "inline" : "none";
+        const stateFilter = document.getElementById("stateFilter");
+        if (currentScene === 2) {
+            stateFilter.style.display = "inline";
+            // Populate the dropdown with state options
+            d3.select("#stateFilter").selectAll("option")
+                .data(states)
+                .enter().append("option")
+                .attr("value", d => d)
+                .text(d => d);
+        } else {
+            stateFilter.style.display = "none";
+        }
         // Add title
         d3.select("#visualization")
             .append("h2")
@@ -176,4 +180,26 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         svg.append("g")
             .attr("transform", `translate(${margin.left},0)`)
             .call(d3.axisLeft(y));
-        svg.append("text
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", width - margin.right)
+            .attr("y", height - margin.bottom + 30)
+            .text("Date");
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", margin.left - 40)
+            .attr("x", -margin.top)
+            .text("Count");
+        svg.selectAll(".bar.cases")
+            .data(filteredData)
+            .enter().append("rect")
+            .attr("class", "bar cases")
+            .attr("x", d => x(d.date))
+            .attr("y", d => y(d.cases))
+            .attr("width", x.bandwidth() / 2)
+            .attr("height", d => height - margin.bottom - y(d.cases))
+            .attr("fill", "steelblue");
+        svg.selectAll(".bar.deaths")
+            .data(filteredData)
+            .enter
