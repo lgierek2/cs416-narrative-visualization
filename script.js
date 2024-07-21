@@ -86,17 +86,25 @@ function renderTotalCases(data) {
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.date))
         .range([margin.left, width - margin.right]);
+
     const y = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.cases)])
         .range([height - margin.bottom, margin.top]);
 
     const xAxis = d3.axisBottom(x)
         .ticks(d3.timeMonth.every(1))
-        .tickFormat(d3.timeFormat("%b %Y")); // Month abbreviation and year
+        .tickFormat(d => {
+            const formatMonth = d3.timeFormat("%b")(d); // Month abbreviation
+            const formatYear = d3.timeFormat("%Y")(d); // Year
+            return `${formatMonth}\n${formatYear}`; // Format tick label
+        });
 
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(xAxis);
+        .call(xAxis)
+        .selectAll("text") // Adjust text elements
+        .attr("text-anchor", "middle") // Center the text
+        .attr("dy", "1.2em"); // Add vertical spacing
 
     svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
@@ -105,7 +113,7 @@ function renderTotalCases(data) {
     svg.append("text")
         .attr("text-anchor", "end")
         .attr("x", width - margin.right)
-        .attr("y", height - margin.bottom + 40) // Adjust for label space
+        .attr("y", height - margin.bottom + 50) // Adjust for label space
         .text("Date");
     svg.append("text")
         .attr("text-anchor", "end")
@@ -135,17 +143,25 @@ function renderTotalDeaths(data) {
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.date))
         .range([margin.left, width - margin.right]);
+
     const y = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.deaths)])
         .range([height - margin.bottom, margin.top]);
 
     const xAxis = d3.axisBottom(x)
         .ticks(d3.timeMonth.every(1))
-        .tickFormat(d3.timeFormat("%b %Y")); // Month abbreviation and year
+        .tickFormat(d => {
+            const formatMonth = d3.timeFormat("%b")(d); // Month abbreviation
+            const formatYear = d3.timeFormat("%Y")(d); // Year
+            return `${formatMonth}\n${formatYear}`; // Format tick label
+        });
 
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(xAxis);
+        .call(xAxis)
+        .selectAll("text") // Adjust text elements
+        .attr("text-anchor", "middle") // Center the text
+        .attr("dy", "1.2em"); // Add vertical spacing
 
     svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
@@ -154,7 +170,7 @@ function renderTotalDeaths(data) {
     svg.append("text")
         .attr("text-anchor", "end")
         .attr("x", width - margin.right)
-        .attr("y", height - margin.bottom + 40) // Adjust for label space
+        .attr("y", height - margin.bottom + 50) // Adjust for label space
         .text("Date");
     svg.append("text")
         .attr("text-anchor", "end")
