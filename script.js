@@ -11,6 +11,14 @@ function displayDateList(data) {
     });
 }
 
+function renderTotalCases(data) {
+    // Your existing code for rendering total cases
+}
+
+function renderTotalDeaths(data) {
+    // Your existing code for rendering total deaths
+}
+
 function renderComparison(data) {
     const parseDate = d3.timeParse("%m/%d/%Y");
     data.forEach(d => {
@@ -92,6 +100,7 @@ function renderComparison(data) {
         .call(makeAnnotations);
 }
 
+// Main code
 d3.csv('https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv').then(data => {
     const parseDate = d3.timeParse("%m/%d/%Y");
     data.forEach(d => {
@@ -99,6 +108,14 @@ d3.csv('https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         d.cases = +d.cases;
         d.deaths = +d.deaths;
     });
+
+    const scenes = [
+        { title: "Total Cases Over Time", render: renderTotalCases },
+        { title: "Total Deaths Over Time", render: renderTotalDeaths },
+        { title: "Cases vs. Deaths Comparison", render: renderComparison }
+    ];
+
+    let currentSceneIndex = 0;
 
     function renderScene(index) {
         d3.select("#content").html("");
@@ -121,11 +138,3 @@ d3.csv('https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
 
     renderScene(currentSceneIndex);
 });
-
-const scenes = [
-    { title: "Total Cases Over Time", render: renderTotalCases },
-    { title: "Total Deaths Over Time", render: renderTotalDeaths },
-    { title: "Cases vs. Deaths Comparison", render: renderComparison }
-];
-
-let currentSceneIndex = 0;
