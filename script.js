@@ -1,8 +1,10 @@
+const parseDate = d3.timeParse("%Y-%m-%d");
+
 // Load the data
 d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
     // Parse the data
     data.forEach(d => {
-        d.date = d3.timeParse("%m-%d-%Y")(d.date); // Parse date
+        d.date = parseDate(d.date); // Parse date
         d.cases = +d.cases; // Convert cases to number
         d.deaths = +d.deaths; // Convert deaths to number
     });
