@@ -57,11 +57,6 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
     function renderScene() {
         // Clear the visualization area
         d3.select("#visualization").html("");
-        // Render the current scene
-        scenes[currentScene].render();
-        // Update button visibility
-        document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
-        document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
         // Show/hide dropdown based on scene
         const stateFilter = document.getElementById("stateFilter");
         if (currentScene === 2) {
@@ -75,6 +70,11 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         } else {
             stateFilter.style.display = "none";
         }
+        // Render the current scene
+        scenes[currentScene].render();
+        // Update button visibility
+        document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
+        document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
         // Add title
         d3.select("#visualization")
             .append("h2")
@@ -167,6 +167,8 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         const margin = { top: 20, right: 30, bottom: 40, left: 60 };
         const width = +svg.attr("width") - margin.left - margin.right;
         const height = +svg.attr("height") - margin.top - margin.bottom;
+
+        // Define scales
         const x = d3.scaleBand()
             .domain(filteredData.map(d => d.date))
             .range([margin.left, width - margin.right])
@@ -174,12 +176,16 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         const y = d3.scaleLinear()
             .domain([0, d3.max(filteredData, d => Math.max(d.cases, d.deaths))])
             .range([height - margin.bottom, margin.top]);
+
+        // Append axes
         svg.append("g")
             .attr("transform", `translate(0,${height - margin.bottom})`)
             .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d/%Y")));
         svg.append("g")
             .attr("transform", `translate(${margin.left},0)`)
             .call(d3.axisLeft(y));
+
+        // Add labels
         svg.append("text")
             .attr("text-anchor", "end")
             .attr("x", width - margin.right)
@@ -191,6 +197,8 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
             .attr("y", margin.left - 40)
             .attr("x", -margin.top)
             .text("Count");
+
+        // Draw bars for cases
         svg.selectAll(".bar.cases")
             .data(filteredData)
             .enter().append("rect")
@@ -200,6 +208,16 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
             .attr("width", x.bandwidth() / 2)
             .attr("height", d => height - margin.bottom - y(d.cases))
             .attr("fill", "steelblue");
+
+        // Draw bars for deaths
         svg.selectAll(".bar.deaths")
             .data(filteredData)
-            .enter
+            .enter().append("rect")
+            .attr("class", "bar deaths")
+            .attr("x", d => x(d.date) + x.bandwidth() / 2)
+            .attr("y", d => y(d.deaths))
+            .attr("width", x.bandwidth() / 2)
+            .attr("height", d => height - margin.bottom - y(d.deaths))
+            .attr("fill", "red");
+    }
+});

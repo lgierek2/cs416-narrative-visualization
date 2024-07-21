@@ -13,17 +13,18 @@
         .axis--x line {
             display: none;
         }
+        #stateFilter {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>Narrative Visualization Project</h1>
-    <div id="visualization"></div>
+    <div id="visualization">
+        <select id="stateFilter"></select>
+    </div>
     <button id="prevButton" style="display:none;">Previous Scene</button>
     <button id="nextButton">Next Scene</button>
-    <label for="stateFilter">Select State:</label>
-    <select id="stateFilter">
-    </select>
-
     <script src="script.js"></script>
 </body>
 </html>
