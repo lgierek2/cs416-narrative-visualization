@@ -1,5 +1,5 @@
 // Load the data
-d3.csv("us-states.csv").then(data => {
+d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
     // Parse the data
     data.forEach(d => {
         d.date = d3.timeParse("%m/%d/%Y")(d.date); // Parse date
