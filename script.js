@@ -91,12 +91,18 @@ function renderTotalCases(data) {
         .domain([0, d3.max(data, d => d.cases)])
         .range([height - margin.bottom, margin.top]);
 
+    // Custom tick values for March, June, September, December
+    const tickValues = d3.timeMonths(
+        d3.timeMonth.floor(d3.min(data, d => d.date)), // Start from the beginning of the first month
+        d3.timeMonth.ceil(d3.max(data, d => d.date)) // End at the end of the last month
+    ).filter(d => [0, 3, 6, 9].includes(d.getMonth()));
+
     const xAxis = d3.axisBottom(x)
-        .ticks(d3.timeMonth.every(1))
+        .tickValues(tickValues)
         .tickFormat(d => {
             const formatMonth = d3.timeFormat("%b")(d); // Month abbreviation
-            const formatYear = d3.timeFormat("%Y")(d); // Year
-            return `${formatMonth}\n${formatYear}`; // Format tick label
+            const formatYear = d3.timeFormat("%y")(d); // Last two digits of the year
+            return `${formatMonth} '${formatYear}`; // Format tick label
         });
 
     svg.append("g")
@@ -148,12 +154,18 @@ function renderTotalDeaths(data) {
         .domain([0, d3.max(data, d => d.deaths)])
         .range([height - margin.bottom, margin.top]);
 
+    // Custom tick values for March, June, September, December
+    const tickValues = d3.timeMonths(
+        d3.timeMonth.floor(d3.min(data, d => d.date)), // Start from the beginning of the first month
+        d3.timeMonth.ceil(d3.max(data, d => d.date)) // End at the end of the last month
+    ).filter(d => [0, 3, 6, 9].includes(d.getMonth()));
+
     const xAxis = d3.axisBottom(x)
-        .ticks(d3.timeMonth.every(1))
+        .tickValues(tickValues)
         .tickFormat(d => {
             const formatMonth = d3.timeFormat("%b")(d); // Month abbreviation
-            const formatYear = d3.timeFormat("%Y")(d); // Year
-            return `${formatMonth}\n${formatYear}`; // Format tick label
+            const formatYear = d3.timeFormat("%y")(d); // Last two digits of the year
+            return `${formatMonth} '${formatYear}`; // Format tick label
         });
 
     svg.append("g")
