@@ -400,6 +400,16 @@ else if (slideNumber === 3) {
             .attr("x", 30)
             .attr("y", 45)
             .text("Deaths");
+
+        const lowestCasesState = data.reduce((min, d) => d.cases < min.cases ? d : min, data[0]);
+        svg.append("text")
+           .attr("x", x(lowestCasesState.state) + x.bandwidth() / 4)
+           .attr("y", y(lowestCasesState.cases) - 10)
+           .attr("text-anchor", "middle")
+           .style("font-size", "12px")
+           .style("font-weight", "bold")
+           .text("Lowest Total Cases");
+
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }
 }
