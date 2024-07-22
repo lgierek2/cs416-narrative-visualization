@@ -43,10 +43,13 @@
             width: 100%;
             height: 800px;
         }
-        .cell {
-            stroke: #fff;
+        .bar {
+            fill: steelblue;
         }
-        .color-legend {
+        .bar:hover {
+            fill: orange;
+        }
+        .axis text {
             font-size: 12px;
         }
     </style>
@@ -74,25 +77,24 @@
     <script>
         var currentSlide = 1;
         var margin = { top: 50, right: 150, bottom: 120, left: 150 };
-        const width = 1000 - margin.left - margin.right;
-        const height = 600 - margin.top - margin.bottom;
+        const width = 2000 - margin.left - margin.right;
+        const height = 800 - margin.top - margin.bottom;
 
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
 
         const yAxisDomains = [
-            [0, 3000000],   // 0 - Cases
-            [0, 3000000],   // 1 - Deaths (example, use your domain if different)
-            [0, 3000000],   // 2 - Another metric if needed
-            [0, 3000000],   // 3 - Another metric if needed
-            [0, 3000000]    // 4 - Another metric if needed
+            [0, 3000000],   // 0 - GDP
+            [0, 30],        // 1 - Inflation
+            [0, 50],        // 2 - Interest Rate
+            [0, 80],        // 3 - Gov. Debt
+            [0, 7],         // 4 - Exchange Rate
         ];
         const yAxisLabels = [
-            "Overview of Cases",
-            "Overview of Deaths",
-            "Another Metric",
-            "Another Metric",
-            "Another Metric"
+            "Y-Axis 1",
+            "Y-Axis 2",
+            "Y-Axis 3"
         ];
+        const xAxisLabel = "Year";
 
         // Initialize SVG
         const svg = d3.select("#myData")
@@ -116,82 +118,74 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            const states = Array.from(new Set(data.map(d => d.state)));
-            const stateData = data.map(d => ({
-                state: d.state,
-                value: +d.cases // or +d.deaths, based on what you want to visualize
-            }));
+            if (slideNumber === 1) {
+                // Render Heatmap for Nationwide Overview
+                const colorScale = d3.scaleSequential(d3.interpolateViridis)
+                    .domain([0, d3.max(data, d => +d.cases)]);
 
-            const x = d3.scaleBand()
-                .domain(states)
-                .range([0, width])
-                .padding(0.1);
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d.state))
+                    .range([0, width])
+                    .padding(0.1);
 
-            const color = d3.scaleSequential(d3.interpolateReds)
-                .domain([0, d3.max(stateData, d => d.value)]);
+                const y = d3.scaleBand()
+                    .domain(data.map(d => d.state))
+                    .range([height, 0])
+                    .padding(0.1);
 
-            svg.selectAll(".cell")
-                .data(stateData)
-                .enter().append("rect")
-                .attr("class", "cell")
-                .attr("x", d => x(d.state))
-                .attr("y", 0)
-                .attr("width", x.bandwidth())
-                .attr("height", height)
-                .attr("fill", d => color(d.value));
+                svg.selectAll(".cell")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "cell")
+                    .attr("x", d => x(d.state))
+                    .attr("y", d => y(d.state))
+                    .attr("width", x.bandwidth())
+                    .attr("height", y.bandwidth())
+                    .style("fill", d => colorScale(+d.cases));
 
-            svg.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickSize(0).tickPadding(10))
-                .selectAll("text")
-                .attr("transform", "rotate(-45)")
-                .style("text-anchor", "end");
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
 
-            const legendWidth = 200;
-            const legendHeight = 20;
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).tickSize(0));
 
-            const legend = svg.append("g")
-                .attr("transform", `translate(${width + 30}, 0)`)
-                .attr("class", "color-legend");
+                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
 
-            const legendScale = d3.scaleLinear()
-                .domain([0, d3.max(stateData, d => d.value)])
-                .range([0, legendWidth]);
+            } else {
+                // Render other visualizations for different slides
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d.state))
+                    .range([0, width])
+                    .padding(0.1);
 
-            const legendAxis = d3.axisRight(legendScale)
-                .ticks(5)
-                .tickFormat(d3.format(".0s"));
+                const y = d3.scaleLinear()
+                    .domain(yAxisDomains[slideNumber - 1])
+                    .nice()
+                    .range([height, 0]);
 
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#gradient)");
+                svg.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.state))
+                    .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
+                    .attr("width", x.bandwidth())
+                    .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
 
-            svg.append("defs")
-                .append("linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "0%")
-                .selectAll("stop")
-                .data([
-                    { offset: "0%", color: color(0) },
-                    { offset: "100%", color: color(d3.max(stateData, d => d.value)) }
-                ])
-                .enter().append("stop")
-                .attr("offset", d => d.offset)
-                .attr("stop-color", d => d.color);
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
 
-            legend.append("g")
-                .attr("class", "legend-axis")
-                .attr("transform", `translate(0,${legendHeight})`)
-                .call(legendAxis);
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-            d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+            }
         }
 
         function changeSlide(slideNumber) {
@@ -202,7 +196,7 @@
         }
 
         function nextSlide() {
-            currentSlide = (currentSlide % 3) + 1; // Adjust if you have more slides
+            currentSlide = (currentSlide % 3) + 1;
             d3.csv(dataURL).then(function(data) {
                 renderSlide(currentSlide, data);
             });
