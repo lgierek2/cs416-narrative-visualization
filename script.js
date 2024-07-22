@@ -1,202 +1,339 @@
-// Constants
-const margin = { top: 50, right: 50, bottom: 50, left: 50 };
-const width = 960 - margin.left - margin.right;
-const height = 600 - margin.top - margin.bottom;
-const colorScale = d3.scaleSequential(d3.interpolateRed).domain([0, 1000]);
-const svgWidth = 960;
-const svgHeight = 600;
-
-// Load data
-d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
-    // Convert date strings to Date objects
+var currentSlide = 1;
+var margin = { top: 50, right: 150, bottom: 120, left: 150 };
+const width = 1900 - margin.left - margin.right;
+const height = 800 - margin.top - margin.bottom;
+const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
+const yAxisLabels = [
+    "Heatmap of Cases",
+    "Total Cases and Deaths Over Time",
+    "Detailed State Comparison"
+];
+let data = [];
+const svg = d3.select("#myData")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+d3.csv(dataURL).then(function(csvData) {
+    data = csvData;
     data.forEach(d => {
         d.date = new Date(d.date);
         d.cases = +d.cases;
         d.deaths = +d.deaths;
     });
-
-    // Process data
-    const heatmapData = processHeatmapData(data);
-    const lineChartData = processLineChartData(data);
-
-    // Draw heatmap on Nationwide Overview tab
-    drawHeatmap(heatmapData);
-
-    // Initialize the line chart
-    drawLineChart(lineChartData);
-
-    // Initialize the bar chart
-    drawBarChart(data);
-
-    // Event handlers for tabs
-    document.querySelector("#overview-tab").addEventListener("click", () => {
-        document.querySelector("#heatmap").style.display = "block";
-        document.querySelector("#line-chart").style.display = "none";
-        document.querySelector("#bar-chart").style.display = "none";
+    const states = Array.from(new Set(data.map(d => d.state))).sort();
+    const dropdown = d3.select("#stateDropdown");
+    states.forEach(state => {
+        dropdown.append("option")
+            .attr("value", state)
+            .text(state);
     });
-
-    document.querySelector("#line-tab").addEventListener("click", () => {
-        document.querySelector("#heatmap").style.display = "none";
-        document.querySelector("#line-chart").style.display = "block";
-        document.querySelector("#bar-chart").style.display = "none";
-    });
-
-    document.querySelector("#compare-tab").addEventListener("click", () => {
-        document.querySelector("#heatmap").style.display = "none";
-        document.querySelector("#line-chart").style.display = "none";
-        document.querySelector("#bar-chart").style.display = "block";
-    });
-
-    // Initialize dropdown
-    processStateList(data);
-    handleStateSelection();
+    renderSlide(currentSlide);
 });
-
-// Function to process heatmap data
-function processHeatmapData(data) {
-    const heatmapData = d3.group(data, d => d.state, d => d.date.toISOString().split('T')[0]);
-    return Array.from(heatmapData, ([state, dates]) => ({
-        state,
-        values: Array.from(dates, ([date, records]) => ({
-            date,
-            cases: d3.sum(records, d => d.cases)
-        }))
-    }));
-}
-
-// Function to draw heatmap
-function drawHeatmap(data) {
-    const svg = d3.select("#heatmap-svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
+function renderSlide(slideNumber) {
+    d3.select("#myData svg").remove();
+    const svg = d3.select("#myData")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+    if (slideNumber === 1) {
+        d3.csv(dataURL).then(function(data) {
+            data.forEach(d => {
+                d.cases = +d.cases;  
+            });
 
-    // Create scales
-    const xScale = d3.scaleBand().range([0, width]).padding(0.1);
-    const yScale = d3.scaleBand().range([height, 0]).padding(0.1);
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.state).sort())  
+                .range([0, width])
+                .padding(0.1);
 
-    const allDates = Array.from(new Set(data.flatMap(d => d.values.map(v => v.date))));
-    xScale.domain(allDates);
-    yScale.domain(data.map(d => d.state));
+            const y = d3.scaleBand()
+                .domain(["Cases"])  
+                .range([height, 0])
+                .padding(0.1);
 
-    // Draw heatmap
-    svg.selectAll("rect")
-        .data(data.flatMap(d => d.values.map(v => ({ ...v, state: d.state }))))
-        .enter()
-        .append("rect")
-        .attr("x", d => xScale(d.date))
-        .attr("y", d => yScale(d.state))
-        .attr("width", xScale.bandwidth())
-        .attr("height", yScale.bandwidth())
-        .style("fill", d => colorScale(d.cases));
+            const colorScale = d3.scaleSequential(d3.interpolateReds)
+                .domain([0, d3.max(data, d => d.cases)]);
 
-    // Add axes
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xScale));
+            svg.selectAll(".cell")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "cell")
+                .attr("x", d => x(d.state))
+                .attr("y", y("Cases"))
+                .attr("width", x.bandwidth())
+                .attr("height", y.bandwidth())
+                .style("fill", d => colorScale(d.cases))
+                .on("mouseover", function(event, d) {
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`State: ${d.state}<br>Cases: ${d.cases}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("opacity", 0);
+                });
 
-    svg.append("g")
-        .call(d3.axisLeft(yScale));
+            svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
 
-    // Add color legend
-    const legend = svg.append("g")
-        .attr("transform", `translate(${width - 150},0)`);
+            svg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y).tickSize(0));
 
-    legend.selectAll("rect")
-        .data(colorScale.ticks(10))
-        .enter()
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", (d, i) => i * 20)
-        .attr("width", 30)
-        .attr("height", 20)
-        .style("fill", d => colorScale(d));
-    
-    legend.selectAll("text")
-        .data(colorScale.ticks(10))
-        .enter()
-        .append("text")
-        .attr("x", 40)
-        .attr("y", (d, i) => i * 20 + 15)
-        .text(d => d);
+            svg.append("text")
+                .attr("class", "x-axis-label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .text("States");    
+            
+            svg.append("text")
+                .attr("class", "y-axis-label")
+                .attr("text-anchor", "middle")
+                .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+                .text("Number of Cases");
+
+            const legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${width + 30},0)`);
+
+            const legendScale = d3.scaleSequential(d3.interpolateReds)
+                .domain([0, d3.max(data, d => d.cases)]);
+            legend.selectAll("rect")
+                .data(legendScale.ticks(10))
+                .enter().append("rect")
+                .attr("x", 0)
+                .attr("y", (d, i) => i * 20)
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", d => legendScale(d));
+            legend.selectAll("text")
+                .data(legendScale.ticks(10))
+                .enter().append("text")
+                .attr("x", 30)
+                .attr("y", (d, i) => i * 20 + 15)
+                .text(d => d);
+            d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+        });
+    } else if (slideNumber === 2) {
+        const x = d3.scaleTime()
+            .domain(d3.extent(data, d => d.date))
+            .range([0, width]);
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
+            .nice()
+            .range([height, 0]);
+        const lineCases = d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.cases));
+        const lineDeaths = d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.deaths));
+        svg.append("path")
+            .datum(data)
+            .attr("class", "line line-cases")
+            .attr("d", lineCases)
+            .style("stroke", "steelblue")
+            .on("mouseover", function(event, d) {
+            })
+            .on("mousemove", function(event) {
+                const mouseDate = x.invert(d3.pointer(event)[0]);
+                const closestData = data.reduce((prev, curr) => {
+                    return Math.abs(curr.date - mouseDate) < Math.abs(prev.date - mouseDate) ? curr : prev;
+                });
+                d3.select("#tooltip")
+                    .style("opacity", 1)
+                    .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("opacity", 0);
+            });
+        svg.append("path")
+            .datum(data)
+            .attr("class", "line line-deaths")
+            .attr("d", lineDeaths)
+            .style("stroke", "red")
+            .on("mouseover", function(event, d) {
+            })
+            .on("mousemove", function(event) {
+                const mouseDate = x.invert(d3.pointer(event)[0]);
+                const closestData = data.reduce((prev, curr) => {
+                    return Math.abs(curr.date - mouseDate) < Math.abs(prev.date - mouseDate) ? curr : prev;
+                });
+                d3.select("#tooltip")
+                    .style("opacity", 1)
+                    .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("opacity", 0);
+            });
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y));
+        svg.append("text")
+            .attr("class", "x-axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", width / 2)
+            .attr("y", height + margin.bottom - 10)
+            .text("Date");
+
+        svg.append("text")
+            .attr("class", "y-axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+            .text("Number of Cases/Deaths");
+
+        const legend = svg.append("g")
+            .attr("class", "legend")
+            .attr("transform", `translate(${width - 150},10)`);
+
+        legend.append("rect")
+            .attr("width", 20)
+            .attr("height", 20)
+            .style("fill", "steelblue");
+        legend.append("text")
+            .attr("x", 30)
+            .attr("y", 15)
+            .text("Cases");
+        legend.append("rect")
+            .attr("y", 30)
+            .attr("width", 20)
+            .attr("height", 20)
+            .style("fill", "red");
+        legend.append("text")
+            .attr("x", 30)
+            .attr("y", 45)
+            .text("Deaths");
+        d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+    }   
+else if (slideNumber === 3) {
+        const statesSorted = Array.from(new Set(data.map(d => d.state))).sort();
+        const x = d3.scaleBand()
+            .domain(statesSorted)
+            .range([0, width])
+            .padding(0.1);
+        const y = d3.scaleLog()
+            .domain([1, d3.max(data, d => Math.max(d.cases, d.deaths))])
+            .nice()
+            .range([height, 0]);
+        svg.selectAll(".bar-cases")
+        .data(data.filter(d => statesSorted.includes(d.state))) 
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.state))
+            .attr("y", d => y(d.cases))
+            .attr("width", x.bandwidth() / 2)
+            .attr("height", d => height - y(d.cases))
+            .style("fill", "steelblue")
+            .on("mouseover", function(event, d) {
+                d3.select("#tooltip")
+                    .style("opacity", 1)
+                    .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("opacity", 0);
+            });
+        svg.selectAll(".bar-deaths")
+            .data(data.filter(d => statesSorted.includes(d.state)))
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.state) + x.bandwidth() / 2)
+            .attr("y", d => y(d.deaths))
+            .attr("width", x.bandwidth() / 2)
+            .attr("height", d => height - y(d.deaths))
+            .style("fill", "red")
+            .on("mouseover", function(event, d) {
+                d3.select("#tooltip")
+                    .style("opacity", 1)
+                    .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("opacity", 0);
+            });
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y));
+        svg.append("text")
+            .attr("class", "x-axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", width / 2)
+            .attr("y", height + margin.bottom - 10)
+            .text("States");
+
+        svg.append("text")
+            .attr("class", "y-axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+            .text("Number of Cases/Deaths");
+        const legend = svg.append("g")
+            .attr("class", "legend")
+            .attr("transform", `translate(${width - 150},10)`);
+        legend.append("rect")
+            .attr("width", 20)
+            .attr("height", 20)
+            .style("fill", "steelblue");
+        legend.append("text")
+            .attr("x", 30)
+            .attr("y", 15)
+            .text("Cases");
+        legend.append("rect")
+            .attr("y", 30)
+            .attr("width", 20)
+            .attr("height", 20)
+            .style("fill", "red");
+        legend.append("text")
+            .attr("x", 30)
+            .attr("y", 45)
+            .text("Deaths");
+        d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+    }
 }
-
-// Function to process line chart data
-function processLineChartData(data) {
-    const lineChartData = d3.group(data, d => d.date.toISOString().split('T')[0])
-        .entries()
-        .map(([date, records]) => ({
-            date: new Date(date),
-            totalCases: d3.sum(records, d => d.cases),
-            totalDeaths: d3.sum(records, d => d.deaths)
-        }));
-
-    return lineChartData;
+function updateState() {
+    const selectedState = document.getElementById("stateDropdown").value;
+    d3.csv(dataURL).then(function(csvData) {
+        data = csvData.filter(d => d.state === selectedState || selectedState === "");
+        data.forEach(d => {
+            d.date = new Date(d.date);
+            d.cases = +d.cases;
+            d.deaths = +d.deaths;
+        });
+        renderSlide(currentSlide);
+    });
 }
-
-// Function to draw line chart
-function drawLineChart(data) {
-    const svg = d3.select("#line-chart-svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Create scales
-    const xScale = d3.scaleTime().range([0, width]);
-    const yScale = d3.scaleLinear().range([height, 0]);
-
-    xScale.domain(d3.extent(data, d => d.date));
-    yScale.domain([0, d3.max(data, d => Math.max(d.totalCases, d.totalDeaths))]);
-
-    // Line generators
-    const lineCases = d3.line()
-        .x(d => xScale(d.date))
-        .y(d => yScale(d.totalCases));
-    
-    const lineDeaths = d3.line()
-        .x(d => xScale(d.date))
-        .y(d => yScale(d.totalDeaths));
-
-    // Draw lines
-    svg.append("path")
-        .data([data])
-        .attr("d", lineCases)
-        .style("stroke", "blue")
-        .style("fill", "none");
-    
-    svg.append("path")
-        .data([data])
-        .attr("d", lineDeaths)
-        .style("stroke", "red")
-        .style("fill", "none");
-
-    // Add axes
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xScale));
-
-    svg.append("g")
-        .call(d3.axisLeft(yScale));
-
-    // Add legend
-    svg.append("circle").attr("cx", width - 100).attr("cy", 30).attr("r", 6).style("fill", "blue");
-    svg.append("text").attr("x", width - 90).attr("y", 30).text("Total Cases").style("fill", "blue");
-
-    svg.append("circle").attr("cx", width - 100).attr("cy", 60).attr("r", 6).style("fill", "red");
-    svg.append("text").attr("x", width - 90).attr("y", 60).text("Total Deaths").style("fill", "red");
+function changeSlide(slideNumber) {
+    currentSlide = slideNumber;
+    renderSlide(slideNumber);
 }
-
-// Function to draw bar chart
-function drawBarChart(data) {
-    const svg = d3.select("#bar-chart-svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Create scales
-    const xScale = d3.scaleBand().range([0, width]).padding};
-    
-    initialize();
+function nextSlide() {
+    currentSlide = (currentSlide % 3) + 1;
+    renderSlide(currentSlide);
+};
