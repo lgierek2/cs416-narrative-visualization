@@ -103,6 +103,8 @@ function renderSlide(slideNumber) {
                 .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
                 .text("Number of Cases");
             
+            data.forEach(d => d.cases = +d.cases); 
+
             const highestCasesState = data.reduce((max, d) => d.cases > max.cases ? d : max, data[0]);
             const lowestCasesState = data.reduce((min, d) => d.cases < min.cases ? d : min, data[0]);
 
