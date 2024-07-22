@@ -206,6 +206,11 @@
                     .domain(d3.extent(data, d => d.date))
                     .range([0, width]);
 
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
+                    .nice()
+                    .range([height, 0]);
+
                 const lineCases = d3.line()
                     .x(d => x(d.date))
                     .y(d => y(d.cases));
