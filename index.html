@@ -75,6 +75,12 @@
                 <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
             </ul>
         </div>
+        <div id="dropdownContainer">
+            <label for="stateDropdown">Select State: </label>
+            <select id="stateDropdown">
+                <option value="">All States</option>
+            </select>
+        </div>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
     <main id="myData"></main>
@@ -97,11 +103,11 @@
             [0, 7],         // 4 - Exchange Rate
         ];
         const yAxisLabels = [
-            "Heatmap of Cases",
-            "Total Cases and Deaths over Time",
-            "Detailed State Comparison"
+            "Y-Axis 1",
+            "Y-Axis 2",
+            "Y-Axis 3"
         ];
-        const xAxisLabel = "Date";
+        const xAxisLabel = "Year";
 
         // Initialize SVG
         const svg = d3.select("#myData")
@@ -111,17 +117,33 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Load and render data
+        // Load and process data
         d3.csv(dataURL).then(function(data) {
             data.forEach(d => {
                 d.date = new Date(d.date);
                 d.cases = +d.cases;
                 d.deaths = +d.deaths;
             });
+            // Populate dropdown with state options
+            const states = Array.from(new Set(data.map(d => d.state)));
+            const dropdown = d3.select("#stateDropdown");
+            states.forEach(state => {
+                dropdown.append("option")
+                    .attr("value", state)
+                    .text(state);
+            });
+
+            // Render the initial slide
             renderSlide(currentSlide, data);
+            
+            // Update chart based on dropdown selection
+            dropdown.on("change", function() {
+                const selectedState = this.value;
+                renderSlide(currentSlide, data, selectedState);
+            });
         });
 
-        function renderSlide(slideNumber, data) {
+        function renderSlide(slideNumber, data, selectedState = "") {
             d3.select("#myData svg").remove();
             const svg = d3.select("#myData")
                 .append("svg")
@@ -164,10 +186,10 @@
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).tickSize(0));
 
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-                
+                d3.select("#graphDescriptionText").text("Nationwide Heatmap of Cases");
+
             } else if (slideNumber === 2) {
-                // Render Line Chart for Cases and Deaths over Time
+                // Render Cases and Deaths Over Time
                 const x = d3.scaleTime()
                     .domain(d3.extent(data, d => d.date))
                     .range([0, width]);
@@ -186,46 +208,52 @@
                     .y(d => y(d.deaths));
 
                 svg.append("path")
-                    .datum(data)
-                    .attr("class", "line line-cases")
-                    .attr("d", lineCases);
+                    .data([data])
+                    .attr("class", "line")
+                    .attr("d", lineCases)
+                    .style("stroke", "blue")
+                    .style("fill", "none");
 
                 svg.append("path")
-                    .datum(data)
-                    .attr("class", "line line-deaths")
-                    .attr("d", lineDeaths);
+                    .data([data])
+                    .attr("class", "line")
+                    .attr("d", lineDeaths)
+                    .style("stroke", "red")
+                    .style("fill", "none");
 
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(d3.timeFormat("%b %Y")));
+                    .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)));
 
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                d3.select("#graphDescriptionText").text("Cases and Deaths Over Time");
 
-            } else {
-                // Render other visualizations for different slides
+            } else if (slideNumber === 3) {
+                // Render Detailed State Comparison
+                const filteredData = selectedState ? data.filter(d => d.state === selectedState) : data;
+
                 const x = d3.scaleBand()
-                    .domain(data.map(d => d.state))
+                    .domain(filteredData.map(d => d.state))
                     .range([0, width])
                     .padding(0.1);
 
                 const y = d3.scaleLinear()
-                    .domain(yAxisDomains[slideNumber - 1])
+                    .domain([0, d3.max(filteredData, d => d.cases)])
                     .nice()
                     .range([height, 0]);
 
                 svg.selectAll(".bar")
-                    .data(data)
+                    .data(filteredData)
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => x(d.state))
-                    .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
+                    .attr("y", d => y(d.cases))
                     .attr("width", x.bandwidth())
-                    .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
+                    .attr("height", d => height - y(d.cases));
 
                 svg.append("g")
                     .attr("class", "x-axis")
@@ -236,7 +264,8 @@
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                d3.select("#graphDescriptionText").text("Detailed State Comparison of Cases");
+
             }
         }
 
@@ -248,7 +277,7 @@
                     d.cases = +d.cases;
                     d.deaths = +d.deaths;
                 });
-                renderSlide(currentSlide, data);
+                renderSlide(currentSlide, data, document.getElementById('stateDropdown').value);
             });
         }
 
@@ -260,7 +289,7 @@
                     d.cases = +d.cases;
                     d.deaths = +d.deaths;
                 });
-                renderSlide(currentSlide, data);
+                renderSlide(currentSlide, data, document.getElementById('stateDropdown').value);
             });
         }
     </script>
