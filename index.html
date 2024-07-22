@@ -85,7 +85,7 @@
         text-align: center;
         text-decoration: none;
         color: white;
-        background-color: #007BFF;
+        background-color: green;
         border: none;
         border-radius: 5px;
         cursor: pointer;
@@ -114,7 +114,7 @@
                 <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases
                 and Deaths Over Time</a></li>
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
-                <li><a href="#" id="buttonNext" class = "button" onclick="nextSlide()">Next Scene</a></li>
+                <li><a href="#" id="buttonNext" class="button" onclick="nextSlide()">Next Scene</a></li>
             </ul>
         </div>
         <select id="stateDropdown" onchange="updateState()">
@@ -330,6 +330,8 @@
             }   
         else if (slideNumber === 3) {
                 // Render Bar Graph for Cases and Deaths per State
+                const statesSorted = data.map(d => d.state).filter((value, index, self) => self.indexOf(value) === index).sort();
+
                 const x = d3.scaleBand()
                     .domain(data.map(d => d.state))
                     .range([0, width])
