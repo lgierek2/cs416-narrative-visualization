@@ -236,7 +236,7 @@
                     .datum(data)
                     .attr("class", "line line-cases")
                     .attr("d", lineCases)
-                    .style("stroke", "blue")
+                    .style("stroke", "steelblue")
                     .on("mouseover", function(event, d) {
                         // No need to show tooltip on mouseover, handled by mousemove
                     })
@@ -291,7 +291,7 @@
                 legend.append("rect")
                     .attr("width", 20)
                     .attr("height", 20)
-                    .style("fill", "#1f77b4");
+                    .style("fill", "steelblue");
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 15)
@@ -300,7 +300,7 @@
                     .attr("y", 30)
                     .attr("width", 20)
                     .attr("height", 20)
-                    .style("fill", "#ff7f0e");
+                    .style("fill", "red");
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 45)
@@ -345,7 +345,7 @@
                     .attr("y", d => y(d.deaths))
                     .attr("width", x.bandwidth() / 2)
                     .attr("height", d => height - y(d.deaths))
-                    .style("fill", "orange")
+                    .style("fill", "red")
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("opacity", 1)
