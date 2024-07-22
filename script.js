@@ -103,10 +103,7 @@ function renderSlide(slideNumber) {
                 .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
                 .text("Number of Cases");
             
-            data.forEach(d => d.cases = +d.cases); 
-
             const highestCasesState = data.reduce((max, d) => d.cases > max.cases ? d : max, data[0]);
-            const lowestCasesState = data.reduce((min, d) => d.cases < min.cases ? d : min, data[0]);
 
             svg.append("text")
                 .attr("x", x(highestCasesState.state) + x.bandwidth() / 2)
@@ -114,18 +111,10 @@ function renderSlide(slideNumber) {
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "bold")
-                .text(`Highest Cases in ${highestCasesState.state}`); 
-            
-            svg.append("text")
-                .attr("x", x(lowestCasesState.state) + x.bandwidth() / 2)
-                .attr("y", y("Cases") - 10)
-                .attr("text-anchor", "middle")
-                .style("font-size", "12px")
-                .style("font-weight", "bold")
-                .text(`Lowest Cases in ${lowestCasesState.state}`); 
+                .text(`Highest Cases in ${highestCasesState.state}`);  
 
             svg.append("text")
-                .attr("x", width+50)
+                .attr("x", 0)
                 .attr("y", 0)
                 .style("font-size", "12px")
                 .text("Darker shades represent higher case numbers");
