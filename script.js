@@ -407,7 +407,8 @@ else if (slideNumber === 3) {
         }));
             
         const highestCombinedState = combinedData.reduce((max, d) => d.combinedTotal > max.combinedTotal ? d : max, combinedData[0]);
-            
+        const lowestCombinedState = combinedData.reduce((min, d) => d.combinedTotal < min.combinedTotal ? d : min, combinedData[0]);
+
         svg.append("text")
             .attr("x", x(highestCombinedState.state) + x.bandwidth() / 2)
             .attr("y", y(highestCombinedState.combinedTotal) - 10)
@@ -415,6 +416,15 @@ else if (slideNumber === 3) {
             .style("font-size", "12px")
             .style("font-weight", "bold")
             .text("Highest Combined Total");
+        
+        svg.append("text")
+            .attr("x", x(lowestCombinedState.state) + x.bandwidth() / 2)
+            .attr("y", y(lowestCombinedState.combinedTotal) - 10)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .text("Lowest Combined Total");
+
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }
 }
