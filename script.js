@@ -401,15 +401,20 @@ else if (slideNumber === 3) {
             .attr("y", 45)
             .text("Deaths");
 
-        const lowestCasesState = data.reduce((min, d) => d.cases < min.cases ? d : min, data[0]);
+        const combinedData = data.map(d => ({
+            state: d.state,
+            combinedTotal: d.cases + d.deaths
+        }));
+            
+        const highestCombinedState = combinedData.reduce((max, d) => d.combinedTotal > max.combinedTotal ? d : max, combinedData[0]);
+            
         svg.append("text")
-           .attr("x", x(lowestCasesState.state) + x.bandwidth() / 4)
-           .attr("y", 10)
-           .attr("text-anchor", "middle")
-           .style("font-size", "12px")
-           .style("font-weight", "bold")
-           .text("Lowest Total Cases");
-
+            .attr("x", x(highestCombinedState.state) + x.bandwidth() / 2)
+            .attr("y", y(highestCombinedState.combinedTotal) - 10)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .text("Highest Combined Total");
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }
 }
