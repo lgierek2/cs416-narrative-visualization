@@ -180,40 +180,41 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             if (slideNumber === 1) {
-                // Load data and create heatmap
-                d3.csv(dataURL).then(function(data) {
-                    data.forEach(d => {
-                        d.cases = +d.cases;  // Convert cases to number
+                // Load the map data and cases data
+                Promise.all([
+                    d3.json("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-map.json"),
+                    d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv")
+                ]).then(function([mapData, casesData]) {
+                    // Prepare cases data
+                    casesData.forEach(d => {
+                        d.cases = +d.cases;
                     });
 
-                    // Create scales
-                    const x = d3.scaleBand()
-                        .domain(data.map(d => d.state))
-                        .range([0, width])
-                        .padding(0.1);
+                    // Set up the SVG dimensions and projection
+                    const projection = d3.geoAlbersUsa()
+                        .scale(1000)
+                        .translate([width / 2, height / 2]);
+                    
+                    const path = d3.geoPath().projection(projection);
 
-                    const y = d3.scaleBand()
-                        .domain(["Cases"])  // Single row for simplicity
-                        .range([height, 0])
-                        .padding(0.1);
-
+                    // Create color scale
                     const colorScale = d3.scaleSequential(d3.interpolateViridis)
-                        .domain([0, d3.max(data, d => d.cases)]);
+                        .domain([0, d3.max(casesData, d => d.cases)]);
 
-                    // Draw heatmap cells
-                    svg.selectAll(".cell")
-                        .data(data)
-                        .enter().append("rect")
-                        .attr("class", "cell")
-                        .attr("x", d => x(d.state))
-                        .attr("y", y("Cases"))
-                        .attr("width", x.bandwidth())
-                        .attr("height", y.bandwidth())
-                        .style("fill", d => colorScale(d.cases))
+                    // Render the map
+                    svg.selectAll("path")
+                        .data(mapData.features)
+                        .enter().append("path")
+                        .attr("d", path)
+                        .attr("fill", d => {
+                            const stateData = casesData.find(c => c.state === d.properties.name);
+                            return stateData ? colorScale(stateData.cases) : "#ccc";
+                        })
+                        .attr("stroke", "#fff")
                         .on("mouseover", function(event, d) {
                             d3.select("#tooltip")
                                 .style("opacity", 1)
-                                .html(`State: ${d.state}<br>Cases: ${d.cases}`)
+                                .html(`State: ${d.properties.name}<br>Cases: ${casesData.find(c => c.state === d.properties.name)?.cases || 'Data not available'}`)
                                 .style("left", (event.pageX + 10) + "px")
                                 .style("top", (event.pageY - 28) + "px");
                         })
@@ -221,43 +222,14 @@
                             d3.select("#tooltip").style("opacity", 0);
                         });
 
-                    // Add X axis
-                    svg.append("g")
-                        .attr("class", "x-axis")
-                        .attr("transform", `translate(0,${height})`)
-                        .call(d3.axisBottom(x));
+                    // Add map outline
+                    svg.append("path")
+                        .datum(topojson.mesh(mapData, mapData.objects.states, (a, b) => a !== b))
+                        .attr("class", "boundary")
+                        .attr("d", path);
 
-                    // Add Y axis
-                    svg.append("g")
-                        .attr("class", "y-axis")
-                        .call(d3.axisLeft(y).tickSize(0));
-
-                    // Optional: Add color legend
-                    const legend = svg.append("g")
-                        .attr("class", "legend")
-                        .attr("transform", `translate(${width + 30},0)`);
-
-                    const legendScale = d3.scaleSequential(d3.interpolateViridis)
-                        .domain([0, d3.max(data, d => d.cases)]);
-
-                    legend.selectAll("rect")
-                        .data(legendScale.ticks(10))
-                        .enter().append("rect")
-                        .attr("x", 0)
-                        .attr("y", (d, i) => i * 20)
-                        .attr("width", 20)
-                        .attr("height", 20)
-                        .style("fill", d => legendScale(d));
-
-                    legend.selectAll("text")
-                        .data(legendScale.ticks(10))
-                        .enter().append("text")
-                        .attr("x", 30)
-                        .attr("y", (d, i) => i * 20 + 15)
-                        .text(d => d);
-
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-
+                    // Add any additional map-specific elements here
+                    d3.select("#graphDescriptionText").text("Heatmap of COVID-19 cases by state.");
                 });
             } else if (slideNumber === 2) {
                 const x = d3.scaleTime()
