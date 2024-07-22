@@ -180,9 +180,6 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             if (slideNumber === 1) {
-                var margin = { top: 50, right: 200, bottom: 120, left: 150 };
-                var width = 800 - margin.left - margin.right;  // Adjust width based on margins
-                var height = 500 - margin.top - margin.bottom; // Adjust height based on margin
                 // Load data and create heatmap
                 d3.csv(dataURL).then(function(data) {
                     data.forEach(d => {
@@ -226,7 +223,6 @@
 
                     // Add X axis
                     svg.append("g")
-                        .xAxisLabel("States")
                         .attr("class", "x-axis")
                         .attr("transform", `translate(0,${height})`)
                         .call(d3.axisBottom(x))
