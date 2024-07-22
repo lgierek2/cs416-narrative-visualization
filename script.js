@@ -405,9 +405,12 @@ else if (slideNumber === 3) {
             state: d.state,
             combinedTotal: d.cases + d.deaths
         }));
-            
+        combinedData.sort((a, b) => a.combinedTotal - b.combinedTotal);
+
+    const medianIndex = Math.floor(combinedData.length / 2);
+    const medianCombinedState = combinedData[medianIndex];
+
         const highestCombinedState = combinedData.reduce((max, d) => d.combinedTotal > max.combinedTotal ? d : max, combinedData[0]);
-        const lowestCombinedState = combinedData.reduce((min, d) => d.combinedTotal < min.combinedTotal ? d : min, combinedData[0]);
 
         svg.append("text")
             .attr("x", x(highestCombinedState.state) + x.bandwidth() / 2)
@@ -418,13 +421,13 @@ else if (slideNumber === 3) {
             .text("Highest Combined Total");
         
         svg.append("text")
-            .attr("x", x(lowestCombinedState.state) + x.bandwidth() / 2)
-            .attr("y", y(lowestCombinedState.combinedTotal) - 10)
+            .attr("x", x(medianCombinedState.state) + x.bandwidth() / 2)
+            .attr("y", y(medianCombinedState.combinedTotal) - 10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .style("font-weight", "bold")
-            .text("Lowest Combined Total");
-
+            .text("Median Combined Total");
+        
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }
 }
