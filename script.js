@@ -265,7 +265,7 @@ function renderSlide(slideNumber) {
             .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("1 Million U.S. Citizens receive vaccines");
+            .text("");
 
         svg.append("line")
             .attr("x1", x(new Date('2021-12-01')))
@@ -281,20 +281,33 @@ function renderSlide(slideNumber) {
             .style("font-size", "12px")
             .text("New COVID Variant in U.S.");
 
-            svg.append("line")
-            .attr("x1", x(new Date('2021-01-20')))
-            .attr("x2", x(new Date('2021-01-20')))
+        svg.append("line")
+            .attr("x1", x(new Date('2021-02-01')))
+            .attr("x2", x(new Date('2021-02-01')))
             .attr("y1", 0)
             .attr("y2", height)
             .style("stroke", "black")
             .style("stroke-dasharray", "4");
          svg.append("text")
-            .attr("x", x(new Date('2021-01-20')))
+            .attr("x", x(new Date('2021-02-01')))
             .attr("y", 0)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text("Federal Mask Mandate");
-
+        
+        svg.append("line")
+            .attr("x1", x(new Date('2022-04-27')))
+            .attr("x2", x(new Date('2022-04-27')))
+            .attr("y1", 0)
+            .attr("y2", height)
+            .style("stroke", "black")
+            .style("stroke-dasharray", "4");
+         svg.append("text")
+            .attr("x", x(new Date('2022-04-27')))
+            .attr("y", 0)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text("Federal Mask Mandate ends");
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }   
 else if (slideNumber === 3) {
