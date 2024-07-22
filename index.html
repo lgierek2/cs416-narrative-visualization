@@ -3,23 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COVID-19 Heatmap by State</title>
+    <title>Comparative Analysis of COVID-19 Impact Across States</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        .cell {
-            stroke: #fff;
+        header {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+        .mainTitle {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .pagination ul {
+            list-style: none;
+            padding: 0;
+        }
+        .pagination ul li {
+            display: inline;
+            margin: 0 10px;
+        }
+        .pagination a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+        .pagination a:hover {
+            text-decoration: underline;
+        }
+        .graphOrientations {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #my_dataviz {
+            width: 100%;
+            height: 800px;
+        }
+        .bar {
+            fill: steelblue;
+        }
+        .bar:hover {
+            fill: orange;
         }
         .axis text {
             font-size: 12px;
-        }
-        .color-legend {
-            font-size: 12px;
-        }
-        #map {
-            width: 100%;
-            height: 600px;
         }
     </style>
 </head>
@@ -28,111 +59,109 @@
         <span class="mainTitle">Comparative Analysis of COVID-19 Impact Across States</span>
         <div class="pagination">
             <ul id="mainMenu">
-                <li><a href="#" id="Slide1" onclick="changeSlide(1)">COVID-19 Heatmap</a></li>
-                <!-- Add other slides here -->
+                <li><a href="#" id="Slide1" onclick="changeSlide(1)">Overview</a></li>
+                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Trend Analysis</a></li>
+                <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed Comparison</a></li>
+                <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
             </ul>
         </div>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
-    <main id="map"></main>
+    <main id="my_dataviz"></main>
 
-    <!-- Load D3.js and topojson -->
+    <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/topojson.v3.min.js"></script>
     <script>
+        var currentSlide = 1;
+        var margin = { top: 50, right: 150, bottom: 120, left: 150 };
+        const width = 2000 - margin.left - margin.right;
+        const height = 800 - margin.top - margin.bottom;
+
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
-        const geojsonURL = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.geojson"; // URL to US states GeoJSON
 
-        const width = 1200;
-        const height = 600;
+        const yAxisDomains = [
+            [0, 3000000],   // 0 - GDP
+            [0, 30],        // 1 - Inflation
+            [0, 50],        // 2 - Interest Rate
+            [0, 80],        // 3 - Gov. Debt
+            [0, 7],         // 4 - Exchange Rate
+        ];
+        const yAxisLabels = [
+            "Gross Domestic Product (US$ Billion)",     // 0 - GDP
+            "Inflation",                                // 1 - Inflation
+            "Basic Interest Rate",                      // 2 - Interest Rate
+            "Government Debt - % of GDP",               // 3 - Gov. Debt
+            "Exchange Rate per US Dollar"               // 4 - Exchange Rate
+        ];
+        const xAxisLabel = "Year";
 
-        const svg = d3.select("#map")
+        // Initialize SVG
+        const svg = d3.select("#my_dataviz")
             .append("svg")
-            .attr("width", width)
-            .attr("height", height);
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const projection = d3.geoAlbersUsa()
-            .translate([width / 2, height / 2])
-            .scale([1000]);
-
-        const path = d3.geoPath().projection(projection);
-
-        // Load GeoJSON and data
-        Promise.all([
-            d3.json(geojsonURL),
-            d3.csv(dataURL)
-        ]).then(function([geojson, data]) {
-            // Convert data to a usable format
-            const stateData = data.map(d => ({
-                state: d.state,
-                cases: +d.cases // or use 'deaths' if that's your metric
-            }));
-
-            const stateCases = {};
-            stateData.forEach(d => {
-                stateCases[d.state] = d.cases;
-            });
-
-            // Create color scale
-            const maxCases = d3.max(stateData, d => d.cases);
-            const colorScale = d3.scaleSequential(d3.interpolateReds)
-                .domain([0, maxCases]);
-
-            // Draw map
-            svg.selectAll("path")
-                .data(geojson.features)
-                .enter().append("path")
-                .attr("d", path)
-                .attr("fill", d => {
-                    const state = d.properties.name;
-                    return colorScale(stateCases[state] || 0);
-                })
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 1);
-
-            // Add color legend
-            const legendWidth = 300;
-            const legendHeight = 20;
-            const legend = svg.append("g")
-                .attr("transform", `translate(${width - 350},${height - 100})`)
-                .attr("class", "color-legend");
-
-            const legendScale = d3.scaleLinear()
-                .domain([0, maxCases])
-                .range([0, legendWidth]);
-
-            const legendAxis = d3.axisBottom(legendScale)
-                .ticks(5)
-                .tickFormat(d3.format(".0s"));
-
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", legendWidth)
-                .attr("height", legendHeight)
-                .style("fill", "url(#gradient)");
-
-            svg.append("defs")
-                .append("linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "0%")
-                .selectAll("stop")
-                .data([
-                    { offset: "0%", color: colorScale(0) },
-                    { offset: "100%", color: colorScale(maxCases) }
-                ])
-                .enter().append("stop")
-                .attr("offset", d => d.offset)
-                .attr("stop-color", d => d.color);
-
-            legend.append("g")
-                .attr("class", "legend-axis")
-                .attr("transform", `translate(0,${legendHeight})`)
-                .call(legendAxis);
+        // Load and render data
+        d3.csv(dataURL).then(function(data) {
+            renderSlide(currentSlide, data);
         });
+
+        function renderSlide(slideNumber, data) {
+            d3.select("#my_dataviz svg").remove();
+            const svg = d3.select("#my_dataviz")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Define scales and axes
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.state))
+                .range([0, width])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain(yAxisDomains[slideNumber - 1])
+                .nice()
+                .range([height, 0]);
+
+            svg.selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.state))
+                .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
+
+            svg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x));
+
+            svg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+
+            d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+        }
+
+        function changeSlide(slideNumber) {
+            currentSlide = slideNumber;
+            d3.csv(dataURL).then(function(data) {
+                renderSlide(currentSlide, data);
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide % 5) + 1;
+            d3.csv(dataURL).then(function(data) {
+                renderSlide(currentSlide, data);
+            });
+        }
     </script>
 </body>
 </html>
