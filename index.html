@@ -119,9 +119,11 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
             if (slideNumber === 1) {
-                // Render Heatmap for Nationwide Overview
+                // Ensure the 'cases' field is a number
+                data.forEach(d => d.cases = +d.cases);
+
                 const colorScale = d3.scaleSequential(d3.interpolateViridis)
-                    .domain([0, d3.max(data, d => +d.cases)]);
+                    .domain([0, d3.max(data, d => d.cases)]);
 
                 const x = d3.scaleBand()
                     .domain(data.map(d => d.state))
@@ -141,7 +143,7 @@
                     .attr("y", d => y(d.state))
                     .attr("width", x.bandwidth())
                     .attr("height", y.bandwidth())
-                    .style("fill", d => colorScale(+d.cases));
+                    .style("fill", d => colorScale(d.cases));
 
                 svg.append("g")
                     .attr("class", "x-axis")
@@ -186,21 +188,4 @@
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
             }
-        }
-
-        function changeSlide(slideNumber) {
-            currentSlide = slideNumber;
-            d3.csv(dataURL).then(function(data) {
-                renderSlide(currentSlide, data);
-            });
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide % 3) + 1;
-            d3.csv(dataURL).then(function(data) {
-                renderSlide(currentSlide, data);
-            });
-        }
-    </script>
-</body>
-</html>
+};
