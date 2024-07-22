@@ -224,8 +224,17 @@
                     .attr("class", "line line-cases")
                     .attr("d", lineCases)
                     .on("mouseover", function(event, d) {
+                        // No need to show tooltip on mouseover, handled by mousemove
+                    })
+                    .on("mousemove", function(event) {
+                        const mouseDate = x.invert(d3.pointer(event)[0]);
+                        const closestData = data.reduce((prev, curr) => {
+                            return Math.abs(curr.date - mouseDate) < Math.abs(prev.date - mouseDate) ? curr : prev;
+                        });
+
                         d3.select("#tooltip")
                             .style("opacity", 1)
+                            .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px");
                     })
@@ -238,8 +247,17 @@
                     .attr("class", "line line-deaths")
                     .attr("d", lineDeaths)
                     .on("mouseover", function(event, d) {
+                        // No need to show tooltip on mouseover, handled by mousemove
+                    })
+                    .on("mousemove", function(event) {
+                        const mouseDate = x.invert(d3.pointer(event)[0]);
+                        const closestData = data.reduce((prev, curr) => {
+                            return Math.abs(curr.date - mouseDate) < Math.abs(prev.date - mouseDate) ? curr : prev;
+                        });
+
                         d3.select("#tooltip")
                             .style("opacity", 1)
+                            .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px");
                     })
@@ -282,8 +300,8 @@
                     .text("Deaths");
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-
-            } else if (slideNumber === 3) {
+            }   
+        else if (slideNumber === 3) {
                 // Render Bar Graph for Cases and Deaths per State
                 const x = d3.scaleBand()
                     .domain(data.map(d => d.state))
