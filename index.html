@@ -181,56 +181,23 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             if (slideNumber === 1) {
                 // Load the map data and cases data
-                Promise.all([
-                    d3.json("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-map.json"),
                     d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv")
-                ]).then(function([mapData, casesData]) {
-                    // Prepare cases data
-                    casesData.forEach(d => {
-                        d.cases = +d.cases;
-                    });
-
-                    // Set up the SVG dimensions and projection
-                    const projection = d3.geoAlbersUsa()
-                        .scale(1000)
-                        .translate([width / 2, height / 2]);
-                    
+                    const svg = d3.select("svg");
+                    const projection = d3.geoAlbersUsa().scale(1000).translate([width / 2, height / 2]);
                     const path = d3.geoPath().projection(projection);
 
-                    // Create color scale
-                    const colorScale = d3.scaleSequential(d3.interpolateViridis)
-                        .domain([0, d3.max(casesData, d => d.cases)]);
-
-                    // Render the map
+                    // Load and display the map
+                    d3.json("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-map.json").then(function(data) {
                     svg.selectAll("path")
-                        .data(mapData.features)
+                        .data(data.features)
                         .enter().append("path")
                         .attr("d", path)
                         .attr("fill", d => {
-                            const stateData = casesData.find(c => c.state === d.properties.name);
-                            return stateData ? colorScale(stateData.cases) : "#ccc";
+                        // For now, set fill color to blue for all states
+                        return "blue";
                         })
-                        .attr("stroke", "#fff")
-                        .on("mouseover", function(event, d) {
-                            d3.select("#tooltip")
-                                .style("opacity", 1)
-                                .html(`State: ${d.properties.name}<br>Cases: ${casesData.find(c => c.state === d.properties.name)?.cases || 'Data not available'}`)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 28) + "px");
-                        })
-                        .on("mouseout", function() {
-                            d3.select("#tooltip").style("opacity", 0);
-                        });
-
-                    // Add map outline
-                    svg.append("path")
-                        .datum(topojson.mesh(mapData, mapData.objects.states, (a, b) => a !== b))
-                        .attr("class", "boundary")
-                        .attr("d", path);
-
-                    // Add any additional map-specific elements here
-                    d3.select("#graphDescriptionText").text("Heatmap of COVID-19 cases by state.");
-                });
+                        .attr("stroke", "white");
+                    });
             } else if (slideNumber === 2) {
                 const x = d3.scaleTime()
                     .domain(d3.extent(data, d => d.date))
