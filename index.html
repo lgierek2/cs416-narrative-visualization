@@ -3,165 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparative Analysis of COVID-19 Impact Across States</title>
+    <title>COVID-19 Heatmap by State</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
         }
-        header {
-            background-color: #f4f4f4;
-            padding: 20px;
-            text-align: center;
-        }
-        .mainTitle {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .pagination ul {
-            list-style: none;
-            padding: 0;
-        }
-        .pagination ul li {
-            display: inline;
-            margin: 0 10px;
-        }
-        .pagination a {
-            text-decoration: none;
-            color: #007BFF;
-        }
-        .pagination a:hover {
-            text-decoration: underline;
-        }
-        .graphOrientations {
-            display: block;
-            margin-top: 10px;
-            font-size: 16px;
-        }
-        #my_dataviz {
-            width: 100%;
-            height: 800px;
-        }
-        .bar {
-            fill: steelblue;
-        }
-        .bar:hover {
-            fill: orange;
+        .cell {
+            stroke: #fff;
         }
         .axis text {
+            font-size: 12px;
+        }
+        .color-legend {
             font-size: 12px;
         }
     </style>
 </head>
 <body>
-    <header>
-        <span class="mainTitle">Comparative Analysis of COVID-19 Impact Across States</span>
-        <div class="pagination">
-            <ul id="mainMenu">
-                <li><a href="#" id="Slide1" onclick="changeSlide(1)">Overview</a></li>
-                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Trend Analysis</a></li>
-                <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed Comparison</a></li>
-                <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
-            </ul>
-        </div>
-        <span id="graphDescriptionText" class="graphOrientations"></span>
-    </header>
-    <main id="my_dataviz"></main>
+    <h1>COVID-19 Heatmap by State</h1>
+    <svg id="heatmap" width="1000" height="600"></svg>
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        var currentSlide = 1;
-        var margin = { top: 50, right: 150, bottom: 120, left: 150 };
-        const width = 2000 - margin.left - margin.right;
-        const height = 800 - margin.top - margin.bottom;
-
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
 
-        const yAxisDomains = [
-            [0, 3000000],   // 0 - GDP
-            [0, 30],        // 1 - Inflation
-            [0, 50],        // 2 - Interest Rate
-            [0, 80],        // 3 - Gov. Debt
-            [0, 7],         // 4 - Exchange Rate
-        ];
-        const yAxisLabels = [
-            "Gross Domestic Product (US$ Billion)",     // 0 - GDP
-            "Inflation",                                // 1 - Inflation
-            "Basic Interest Rate",                      // 2 - Interest Rate
-            "Government Debt - % of GDP",               // 3 - Gov. Debt
-            "Exchange Rate per US Dollar"               // 4 - Exchange Rate
-        ];
-        const xAxisLabel = "Year";
+        const margin = { top: 50, right: 50, bottom: 100, left: 150 };
+        const width = 1000 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
 
-        // Initialize SVG
-        const svg = d3.select("#my_dataviz")
-            .append("svg")
+        const svg = d3.select("#heatmap")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Load and render data
+        // Load and process data
         d3.csv(dataURL).then(function(data) {
-            renderSlide(currentSlide, data);
-        });
+            // Filter data if necessary (e.g., sum cases or deaths if needed)
+            const stateData = data.map(d => ({
+                state: d.state,
+                cases: +d.cases // or use 'deaths' if that's your metric
+            }));
 
-        function renderSlide(slideNumber, data) {
-            d3.select("#my_dataviz svg").remove();
-            const svg = d3.select("#my_dataviz")
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+            const states = stateData.map(d => d.state);
+            const maxCases = d3.max(stateData, d => d.cases);
 
-            // Define scales and axes
+            // Define scales
             const x = d3.scaleBand()
-                .domain(data.map(d => d.state))
+                .domain(states)
                 .range([0, width])
                 .padding(0.1);
 
-            const y = d3.scaleLinear()
-                .domain(yAxisDomains[slideNumber - 1])
-                .nice()
-                .range([height, 0]);
+            const color = d3.scaleSequential(d3.interpolateReds)
+                .domain([0, maxCases]);
 
-            svg.selectAll(".bar")
-                .data(data)
+            // Draw the heatmap cells
+            svg.selectAll(".cell")
+                .data(stateData)
                 .enter().append("rect")
-                .attr("class", "bar")
+                .attr("class", "cell")
                 .attr("x", d => x(d.state))
-                .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
+                .attr("y", 0)
                 .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
+                .attr("height", height)
+                .attr("fill", d => color(d.cases));
 
+            // Add x-axis
             svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x).tickSize(0).tickPadding(10))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
 
-            svg.append("g")
-                .attr("class", "y-axis")
-                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+            // Add color legend
+            const legendWidth = 400;
+            const legendHeight = 20;
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width + 30}, 0)`)
+                .attr("class", "color-legend");
 
-            d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-        }
+            const legendScale = d3.scaleLinear()
+                .domain([0, maxCases])
+                .range([0, legendWidth]);
 
-        function changeSlide(slideNumber) {
-            currentSlide = slideNumber;
-            d3.csv(dataURL).then(function(data) {
-                renderSlide(currentSlide, data);
-            });
-        }
+            const legendAxis = d3.axisRight(legendScale)
+                .ticks(5)
+                .tickFormat(d3.format(".0s"));
 
-        function nextSlide() {
-            currentSlide = (currentSlide % 5) + 1;
-            d3.csv(dataURL).then(function(data) {
-                renderSlide(currentSlide, data);
-            });
-        }
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#gradient)");
+
+            svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "0%")
+                .selectAll("stop")
+                .data([
+                    { offset: "0%", color: color(0) },
+                    { offset: "100%", color: color(maxCases) }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color);
+
+            legend.append("g")
+                .attr("class", "legend-axis")
+                .attr("transform", `translate(0,${legendHeight})`)
+                .call(legendAxis);
+        });
     </script>
 </body>
 </html>
