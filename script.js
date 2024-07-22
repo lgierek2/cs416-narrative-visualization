@@ -120,7 +120,7 @@ function renderSlide(slideNumber) {
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "bold")
-                .text(`Highest Cases in ${lowestCasesState.state}`); 
+                .text(`Lowest Cases in ${lowestCasesState.state}`); 
 
             svg.append("text")
                 .attr("x", width+50)
