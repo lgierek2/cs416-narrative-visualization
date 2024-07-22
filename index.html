@@ -225,6 +225,7 @@
                     svg.append("g")
                         .attr("class", "x-axis")
                         .attr("transform", `translate(0,${height})`)
+                        .attr("transform", "rotate(-45)")
                         .call(d3.axisBottom(x));
 
                     // Add Y axis
