@@ -307,9 +307,9 @@
             }   
         else if (slideNumber === 3) {
                 // Render Bar Graph for Cases and Deaths per State
-                const statesSorted = data.map(d => d.state).filter((value, index, self) => self.indexOf(value) === index).sort();
+                const statesSorted = Array.from(new Set(data.map(d => d.state))).sort();
                 const x = d3.scaleBand()
-                    .domain(data.map(d => d.state))
+                    .domain(statesSorted)
                     .range([0, width])
                     .padding(0.1);
                 const y = d3.scaleLog()
@@ -317,7 +317,7 @@
                     .nice()
                     .range([height, 0]);
                 svg.selectAll(".bar-cases")
-                    .data(data)
+                .data(data.filter(d => statesSorted.includes(d.state))) 
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => x(d.state))
@@ -336,7 +336,7 @@
                         d3.select("#tooltip").style("opacity", 0);
                     });
                 svg.selectAll(".bar-deaths")
-                    .data(data)
+                    .data(data.filter(d => statesSorted.includes(d.state)))
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => x(d.state) + x.bandwidth() / 2)
