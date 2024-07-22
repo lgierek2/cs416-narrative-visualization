@@ -104,7 +104,7 @@ function renderSlide(slideNumber) {
                 .text("Number of Cases");
             
             const highestCasesState = data.reduce((max, d) => d.cases > max.cases ? d : max, data[0]);
-            const lowestCasesState = data.reduce((min, d) => d.cases > min.cases ? d : min, data[0]);
+            const lowestCasesState = data.reduce((min, d) => d.cases < min.cases ? d : min, data[0]);
 
             svg.append("text")
                 .attr("x", x(highestCasesState.state) + x.bandwidth() / 2)
