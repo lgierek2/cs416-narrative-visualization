@@ -114,7 +114,7 @@ function renderSlide(slideNumber) {
                 .text(`Highest Cases in ${highestCasesState.state}`);  
 
             svg.append("text")
-                .attr("x", 1825)
+                .attr("x", 1700)
                 .attr("y", 0)
                 .style("font-size", "12px")
                 .text("Darker shades represent higher case numbers");
@@ -284,8 +284,8 @@ function renderSlide(slideNumber) {
         svg.append("line")
             .attr("x1", x(new Date('2021-02-01')))
             .attr("x2", x(new Date('2021-02-01')))
-            .attr("y1", 0)
-            .attr("y2", 25)
+            .attr("y1", height)
+            .attr("y2", height-25)
             .style("stroke", "black")
             .style("stroke-dasharray", "4");
          svg.append("text")
