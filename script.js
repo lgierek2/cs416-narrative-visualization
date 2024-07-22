@@ -78,7 +78,7 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
 
     function renderTotalCases(data) {
         const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const margin = { top: 20, right: 30, bottom: 80, left: 80 };
         const width = +svg.attr("width") - margin.left - margin.right;
         const height = +svg.attr("height") - margin.top - margin.bottom;
         const x = d3.scaleTime()
@@ -117,7 +117,7 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
 
     function renderTotalDeaths(data) {
         const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const margin = { top: 20, right: 30, bottom: 80, left: 80 };
         const width = +svg.attr("width") - margin.left - margin.right;
         const height = +svg.attr("height") - margin.top - margin.bottom;
         const x = d3.scaleTime()
@@ -159,7 +159,7 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         const filteredData = data.filter(d => d.state === selectedState);
 
         const svg = d3.select("#visualization").append("svg").attr("width", 800).attr("height", 400);
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const margin = { top: 20, right: 30, bottom: 80, left: 80 };
         const width = +svg.attr("width") - margin.left - margin.right;
         const height = +svg.attr("height") - margin.top - margin.bottom;
         const x = d3.scaleBand()
