@@ -110,8 +110,13 @@ function renderSlide(slideNumber) {
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "bold")
-                .text("Highest Cases");
-                
+                .text("Highest Cases in California");
+
+            svg.append("text")
+                .attr("x", width + 50)
+                .attr("y", 200)
+                .style("font-size", "12px")
+                .text("Darker shades represent higher case numbers");
 
             const legend = svg.append("g")
                 .attr("class", "legend")
@@ -210,6 +215,20 @@ function renderSlide(slideNumber) {
             .attr("text-anchor", "middle")
             .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
             .text("Number of Cases/Deaths");
+
+        svg.append("line")
+            .attr("x1", x(new Date('2020-03-13')))
+            .attr("x2", x(new Date('2020-03-13')))
+            .attr("y1", 0)
+            .attr("y2", height)
+            .style("stroke", "black")
+            .style("stroke-dasharray", "4");
+         svg.append("text")
+            .attr("x", x(new Date('2020-03-13')))
+            .attr("y", -10)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text("U.S. declares National Emergency - March 2020");
 
         const legend = svg.append("g")
             .attr("class", "legend")
