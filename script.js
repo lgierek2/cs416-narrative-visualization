@@ -224,17 +224,6 @@ function drawBarChart(data) {
                 .style("display", "inline-block")
                 .html(`State: ${d.state}<br>Cases: ${d.cases}`);
         })
-        .on("mouseout", function()
-
-
-
-
-more 
-ChatGPT
-Here’s the continuation of the script.js file, completing the drawBarChart function and including additional utility functions:
-
-javascript
-Copy code
         .on("mouseout", function() {
             d3.select(this).style("fill", "steelblue");
             d3.select("#tooltip").style("display", "none");
