@@ -39,17 +39,14 @@
             margin-top: 10px;
             font-size: 16px;
         }
-        #my_dataviz {
+        #myData {
             width: 100%;
             height: 800px;
         }
-        .bar {
-            fill: steelblue;
+        .cell {
+            stroke: #fff;
         }
-        .bar:hover {
-            fill: orange;
-        }
-        .axis text {
+        .color-legend {
             font-size: 12px;
         }
     </style>
@@ -67,36 +64,35 @@
         </div>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
-    <main id="my_dataviz"></main>
+    <main id="myData"></main>
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         var currentSlide = 1;
         var margin = { top: 50, right: 150, bottom: 120, left: 150 };
-        const width = 2000 - margin.left - margin.right;
-        const height = 800 - margin.top - margin.bottom;
+        const width = 1000 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
 
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
 
         const yAxisDomains = [
-            [0, 3000000],   // 0 - GDP
-            [0, 30],        // 1 - Inflation
-            [0, 50],        // 2 - Interest Rate
-            [0, 80],        // 3 - Gov. Debt
-            [0, 7],         // 4 - Exchange Rate
+            [0, 3000000],   // 0 - Cases
+            [0, 3000000],   // 1 - Deaths (example, use your domain if different)
+            [0, 3000000],   // 2 - Another metric if needed
+            [0, 3000000],   // 3 - Another metric if needed
+            [0, 3000000]    // 4 - Another metric if needed
         ];
         const yAxisLabels = [
-            "Gross Domestic Product (US$ Billion)",     // 0 - GDP
-            "Inflation",                                // 1 - Inflation
-            "Basic Interest Rate",                      // 2 - Interest Rate
-            "Government Debt - % of GDP",               // 3 - Gov. Debt
-            "Exchange Rate per US Dollar"               // 4 - Exchange Rate
+            "Overview of Cases",
+            "Overview of Deaths",
+            "Another Metric",
+            "Another Metric",
+            "Another Metric"
         ];
-        const xAxisLabel = "Year";
 
         // Initialize SVG
-        const svg = d3.select("#my_dataviz")
+        const svg = d3.select("#myData")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -109,42 +105,88 @@
         });
 
         function renderSlide(slideNumber, data) {
-            d3.select("#my_dataviz svg").remove();
-            const svg = d3.select("#my_dataviz")
+            d3.select("#myData svg").remove();
+            const svg = d3.select("#myData")
                 .append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Define scales and axes
+            const states = Array.from(new Set(data.map(d => d.state)));
+            const stateData = data.map(d => ({
+                state: d.state,
+                value: +d.cases // or +d.deaths, based on what you want to visualize
+            }));
+
             const x = d3.scaleBand()
-                .domain(data.map(d => d.state))
+                .domain(states)
                 .range([0, width])
                 .padding(0.1);
 
-            const y = d3.scaleLinear()
-                .domain(yAxisDomains[slideNumber - 1])
-                .nice()
-                .range([height, 0]);
+            const color = d3.scaleSequential(d3.interpolateReds)
+                .domain([0, d3.max(stateData, d => d.value)]);
 
-            svg.selectAll(".bar")
-                .data(data)
+            svg.selectAll(".cell")
+                .data(stateData)
                 .enter().append("rect")
-                .attr("class", "bar")
+                .attr("class", "cell")
                 .attr("x", d => x(d.state))
-                .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
+                .attr("y", 0)
                 .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
+                .attr("height", height)
+                .attr("fill", d => color(d.value));
 
             svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x).tickSize(0).tickPadding(10))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
 
-            svg.append("g")
-                .attr("class", "y-axis")
-                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+            const legendWidth = 200;
+            const legendHeight = 20;
+
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width + 30}, 0)`)
+                .attr("class", "color-legend");
+
+            const legendScale = d3.scaleLinear()
+                .domain([0, d3.max(stateData, d => d.value)])
+                .range([0, legendWidth]);
+
+            const legendAxis = d3.axisRight(legendScale)
+                .ticks(5)
+                .tickFormat(d3.format(".0s"));
+
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#gradient)");
+
+            svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "0%")
+                .selectAll("stop")
+                .data([
+                    { offset: "0%", color: color(0) },
+                    { offset: "100%", color: color(d3.max(stateData, d => d.value)) }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color);
+
+            legend.append("g")
+                .attr("class", "legend-axis")
+                .attr("transform", `translate(0,${legendHeight})`)
+                .call(legendAxis);
 
             d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
         }
@@ -157,7 +199,7 @@
         }
 
         function nextSlide() {
-            currentSlide = (currentSlide % 5) + 1;
+            currentSlide = (currentSlide % 3) + 1; // Adjust if you have more slides
             d3.csv(dataURL).then(function(data) {
                 renderSlide(currentSlide, data);
             });
