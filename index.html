@@ -41,11 +41,7 @@
         }
         #myData {
             width: 100%;
-            height: 800px; 
-        }
-        #stateDropdown {
-            display: none;
-            margin-bottom: 20px;
+            height: 800px;
         }
         .bar {
             fill: steelblue;
@@ -77,7 +73,6 @@
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
     <main id="myData"></main>
-    <select id="stateDropdown"></select>
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -86,22 +81,44 @@
         var margin = { top: 50, right: 150, bottom: 120, left: 150 };
         const width = 2000 - margin.left - margin.right;
         const height = 800 - margin.top - margin.bottom;
+
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
 
-        function renderSlide(slideNumber, data) {
-            // Remove existing SVG
-            d3.select("#myData svg").remove();
+        const yAxisDomains = [
+            [0, 3000000],   // 0 - GDP
+            [0, 30],        // 1 - Inflation
+            [0, 50],        // 2 - Interest Rate
+            [0, 80],        // 3 - Gov. Debt
+            [0, 7],         // 4 - Exchange Rate
+        ];
+        const yAxisLabels = [
+            "Y-Axis 1",
+            "Y-Axis 2",
+            "Y-Axis 3"
+        ];
+        const xAxisLabel = "Year";
 
+        // Initialize SVG
+        const svg = d3.select("#myData")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Load and render data
+        d3.csv(dataURL).then(function(data) {
+            renderSlide(currentSlide, data);
+        });
+
+        function renderSlide(slideNumber, data) {
+            d3.select("#myData svg").remove();
             const svg = d3.select("#myData")
                 .append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
-
-            // Show or hide the dropdown based on slide
-            const dropdown = d3.select("#stateDropdown");
-            dropdown.style("display", slideNumber === 2 || slideNumber === 3 ? "block" : "none");
 
             if (slideNumber === 1) {
                 // Render Heatmap for Nationwide Overview
@@ -137,78 +154,74 @@
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).tickSize(0));
 
-                d3.select("#graphDescriptionText").text("Nationwide Overview");
-
+                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                
             } else if (slideNumber === 2) {
                 // Render Cases and Deaths over Time
-                const x = d3.scaleBand()
-                    .domain(data.map(d => d.date))
-                    .range([0, width])
-                    .padding(0.1);
+                const x = d3.scaleTime()
+                    .domain(d3.extent(data, d => new Date(d.date)))
+                    .range([0, width]);
 
-                const y = d3.scaleLinear()
+                const yCases = d3.scaleLinear()
                     .domain([0, d3.max(data, d => +d.cases)])
                     .nice()
-                    .range([height, 0]);
+                    .range([height / 2, 0]);
 
-                svg.selectAll(".bar")
-                    .data(data)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.date))
-                    .attr("y", d => y(d.cases))
-                    .attr("width", x.bandwidth())
-                    .attr("height", d => height - y(d.cases));
+                const yDeaths = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => +d.deaths)])
+                    .nice()
+                    .range([height, height / 2]);
+
+                svg.append("path")
+                    .data([data])
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(d => x(new Date(d.date)))
+                        .y(d => yCases(d.cases))
+                    );
+
+                svg.append("path")
+                    .data([data])
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(d => x(new Date(d.date)))
+                        .y(d => yDeaths(d.deaths))
+                    );
 
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%b %d")))
-                    .selectAll("text")
-                    .attr("transform", "rotate(-45)")
-                    .style("text-anchor", "end");
+                    .call(d3.axisBottom(x));
 
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+                    .attr("transform", `translate(0,0)`)
+                    .call(d3.axisLeft(yCases).ticks(5).tickFormat(d3.format(".0s")));
 
-                // Update the dropdown options
-                dropdown.selectAll("option").remove();
-
-                dropdown.selectAll("option")
-                    .data([...new Set(data.map(d => d.state))].sort())
-                    .enter().append("option")
-                    .attr("value", d => d)
-                    .text(d => d);
-
-                dropdown.on("change", function() {
-                    const selectedState = this.value;
-                    const filteredData = data.filter(d => d.state === selectedState);
-                    
-                    svg.selectAll(".bar").remove();
-
-                    svg.selectAll(".bar")
-                        .data(filteredData)
-                        .enter().append("rect")
-                        .attr("class", "bar")
-                        .attr("x", d => x(d.date))
-                        .attr("y", d => y(d.cases))
-                        .attr("width", x.bandwidth())
-                        .attr("height", d => height - y(d.cases));
-                });
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .attr("transform", `translate(0,${height / 2})`)
+                    .call(d3.axisLeft(yDeaths).ticks(5).tickFormat(d3.format(".0s")));
 
                 d3.select("#graphDescriptionText").text("Cases and Deaths over Time");
 
             } else if (slideNumber === 3) {
                 // Render Detailed State Comparison
                 const sortedData = data.sort((a, b) => d3.ascending(a.state, b.state));
+
                 const x = d3.scaleBand()
                     .domain(sortedData.map(d => d.state))
                     .range([0, width])
                     .padding(0.1);
 
                 const y = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => +d.cases)])
+                    .domain([0, d3.max(sortedData, d => +d.cases)])
                     .nice()
                     .range([height, 0]);
 
@@ -220,7 +233,7 @@
                     .attr("y", d => y(d.cases))
                     .attr("width", x.bandwidth())
                     .attr("height", d => height - y(d.cases));
-                
+
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
@@ -233,21 +246,23 @@
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-                // Update the dropdown options
-                dropdown.selectAll("option").remove();
-
-                dropdown.selectAll("option")
-                    .data([...new Set(data.map(d => d.state))].sort())
+                // Dropdown for state selection
+                d3.select("body").append("select")
+                    .attr("id", "stateDropdown")
+                    .attr("name", "states")
+                    .selectAll("option")
+                    .data(sortedData.map(d => d.state))
                     .enter().append("option")
                     .attr("value", d => d)
                     .text(d => d);
 
-                dropdown.on("change", function() {
+                d3.select("#stateDropdown").on("change", function() {
                     const selectedState = this.value;
                     const filteredData = data.filter(d => d.state === selectedState);
                     
+                    // Update chart with selected state data
                     svg.selectAll(".bar").remove();
-
+                    
                     svg.selectAll(".bar")
                         .data(filteredData)
                         .enter().append("rect")
@@ -259,6 +274,7 @@
                 });
 
                 d3.select("#graphDescriptionText").text("Detailed State Comparison");
+
             }
         }
 
@@ -275,11 +291,6 @@
                 renderSlide(currentSlide, data);
             });
         }
-
-        // Initial render
-        d3.csv(dataURL).then(function(data) {
-            renderSlide(currentSlide, data);
-        });
     </script>
 </body>
 </html>
