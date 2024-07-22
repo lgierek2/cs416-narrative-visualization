@@ -52,15 +52,10 @@
         .axis text {
             font-size: 12px;
         }
-        .line {
-            fill: none;
-            stroke-width: 2;
-        }
-        .line-cases {
-            stroke: #1f77b4;
-        }
-        .line-deaths {
-            stroke: #ff7f0e;
+        .x-axis text {
+            text-anchor: end;
+            transform: rotate(-45deg);
+            transform-origin: 0 0;
         }
     </style>
 </head>
@@ -74,12 +69,6 @@
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
                 <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
             </ul>
-        </div>
-        <div id="dropdownContainer">
-            <label for="stateDropdown">Select State: </label>
-            <select id="stateDropdown">
-                <option value="">All States</option>
-            </select>
         </div>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
@@ -117,33 +106,12 @@
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Load and process data
+        // Load and render data
         d3.csv(dataURL).then(function(data) {
-            data.forEach(d => {
-                d.date = new Date(d.date);
-                d.cases = +d.cases;
-                d.deaths = +d.deaths;
-            });
-            // Populate dropdown with state options
-            const states = Array.from(new Set(data.map(d => d.state)));
-            const dropdown = d3.select("#stateDropdown");
-            states.forEach(state => {
-                dropdown.append("option")
-                    .attr("value", state)
-                    .text(state);
-            });
-
-            // Render the initial slide
             renderSlide(currentSlide, data);
-            
-            // Update chart based on dropdown selection
-            dropdown.on("change", function() {
-                const selectedState = this.value;
-                renderSlide(currentSlide, data, selectedState);
-            });
         });
 
-        function renderSlide(slideNumber, data, selectedState = "") {
+        function renderSlide(slideNumber, data) {
             d3.select("#myData svg").remove();
             const svg = d3.select("#myData")
                 .append("svg")
@@ -186,68 +154,79 @@
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).tickSize(0));
 
-                d3.select("#graphDescriptionText").text("Nationwide Heatmap of Cases");
-
+                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                
             } else if (slideNumber === 2) {
-                // Render Cases and Deaths Over Time
+                // Render Cases and Deaths over Time
                 const x = d3.scaleTime()
-                    .domain(d3.extent(data, d => d.date))
+                    .domain(d3.extent(data, d => new Date(d.date)))
                     .range([0, width]);
 
-                const y = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
+                const yCases = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => +d.cases)])
                     .nice()
-                    .range([height, 0]);
+                    .range([height / 2, 0]);
 
-                const lineCases = d3.line()
-                    .x(d => x(d.date))
-                    .y(d => y(d.cases));
-
-                const lineDeaths = d3.line()
-                    .x(d => x(d.date))
-                    .y(d => y(d.deaths));
+                const yDeaths = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => +d.deaths)])
+                    .nice()
+                    .range([height, height / 2]);
 
                 svg.append("path")
                     .data([data])
                     .attr("class", "line")
-                    .attr("d", lineCases)
-                    .style("stroke", "blue")
-                    .style("fill", "none");
+                    .attr("fill", "none")
+                    .attr("stroke", "steelblue")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(d => x(new Date(d.date)))
+                        .y(d => yCases(d.cases))
+                    );
 
                 svg.append("path")
                     .data([data])
                     .attr("class", "line")
-                    .attr("d", lineDeaths)
-                    .style("stroke", "red")
-                    .style("fill", "none");
+                    .attr("fill", "none")
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 1.5)
+                    .attr("d", d3.line()
+                        .x(d => x(new Date(d.date)))
+                        .y(d => yDeaths(d.deaths))
+                    );
 
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)));
+                    .call(d3.axisBottom(x));
 
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+                    .attr("transform", `translate(0,0)`)
+                    .call(d3.axisLeft(yCases).ticks(5).tickFormat(d3.format(".0s")));
 
-                d3.select("#graphDescriptionText").text("Cases and Deaths Over Time");
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .attr("transform", `translate(0,${height / 2})`)
+                    .call(d3.axisLeft(yDeaths).ticks(5).tickFormat(d3.format(".0s")));
+
+                d3.select("#graphDescriptionText").text("Cases and Deaths over Time");
 
             } else if (slideNumber === 3) {
                 // Render Detailed State Comparison
-                const filteredData = selectedState ? data.filter(d => d.state === selectedState) : data;
+                const sortedData = data.sort((a, b) => d3.ascending(a.state, b.state));
 
                 const x = d3.scaleBand()
-                    .domain(filteredData.map(d => d.state))
+                    .domain(sortedData.map(d => d.state))
                     .range([0, width])
                     .padding(0.1);
 
                 const y = d3.scaleLinear()
-                    .domain([0, d3.max(filteredData, d => d.cases)])
+                    .domain([0, d3.max(sortedData, d => +d.cases)])
                     .nice()
                     .range([height, 0]);
 
                 svg.selectAll(".bar")
-                    .data(filteredData)
+                    .data(sortedData)
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => x(d.state))
@@ -258,40 +237,60 @@
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x));
+                    .call(d3.axisBottom(x))
+                    .selectAll("text")
+                    .attr("transform", "rotate(-45)")
+                    .style("text-anchor", "end");
 
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-                d3.select("#graphDescriptionText").text("Detailed State Comparison of Cases");
+                // Dropdown for state selection
+                d3.select("body").append("select")
+                    .attr("id", "stateDropdown")
+                    .attr("name", "states")
+                    .selectAll("option")
+                    .data(sortedData.map(d => d.state))
+                    .enter().append("option")
+                    .attr("value", d => d)
+                    .text(d => d);
 
+                d3.select("#stateDropdown").on("change", function() {
+                    const selectedState = this.value;
+                    const filteredData = data.filter(d => d.state === selectedState);
+                    
+                    // Update chart with selected state data
+                    svg.selectAll(".bar").remove();
+                    
+                    svg.selectAll(".bar")
+                        .data(filteredData)
+                        .enter().append("rect")
+                        .attr("class", "bar")
+                        .attr("x", d => x(d.state))
+                        .attr("y", d => y(d.cases))
+                        .attr("width", x.bandwidth())
+                        .attr("height", d => height - y(d.cases));
+                });
+
+                d3.select("#graphDescriptionText").text("Detailed State Comparison");
+
+                }
             }
-        }
 
         function changeSlide(slideNumber) {
             currentSlide = slideNumber;
             d3.csv(dataURL).then(function(data) {
-                data.forEach(d => {
-                    d.date = new Date(d.date);
-                    d.cases = +d.cases;
-                    d.deaths = +d.deaths;
-                });
-                renderSlide(currentSlide, data, document.getElementById('stateDropdown').value);
+            renderSlide(currentSlide, data);
             });
         }
 
         function nextSlide() {
             currentSlide = (currentSlide % 3) + 1;
             d3.csv(dataURL).then(function(data) {
-                data.forEach(d => {
-                    d.date = new Date(d.date);
-                    d.cases = +d.cases;
-                    d.deaths = +d.deaths;
-                });
-                renderSlide(currentSlide, data, document.getElementById('stateDropdown').value);
-            });
-        }
+            renderSlide(currentSlide, data);
+        });
+}
     </script>
 </body>
 </html>
