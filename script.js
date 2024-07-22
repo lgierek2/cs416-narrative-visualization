@@ -110,7 +110,7 @@ function renderSlide(slideNumber) {
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
                 .style("font-weight", "bold")
-                .text("Highest Cases in California");
+                .text("California has the highest case count");
 
             svg.append("text")
                 .attr("x", width + 50)
