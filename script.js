@@ -285,7 +285,7 @@ function renderSlide(slideNumber) {
             .attr("x1", x(new Date('2021-02-01')))
             .attr("x2", x(new Date('2021-02-01')))
             .attr("y1", height)
-            .attr("y2", height-25)
+            .attr("y2", 25)
             .style("stroke", "black")
             .style("stroke-dasharray", "4");
          svg.append("text")
