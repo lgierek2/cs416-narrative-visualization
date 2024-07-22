@@ -17,84 +17,91 @@
         .color-legend {
             font-size: 12px;
         }
+        #map {
+            width: 100%;
+            height: 600px;
+        }
     </style>
 </head>
 <body>
-    <h1>COVID-19 Heatmap by State</h1>
-    <svg id="heatmap" width="1200" height="600"></svg>
+    <header>
+        <span class="mainTitle">Comparative Analysis of COVID-19 Impact Across States</span>
+        <div class="pagination">
+            <ul id="mainMenu">
+                <li><a href="#" id="Slide1" onclick="changeSlide(1)">COVID-19 Heatmap</a></li>
+                <!-- Add other slides here -->
+            </ul>
+        </div>
+        <span id="graphDescriptionText" class="graphOrientations"></span>
+    </header>
+    <main id="map"></main>
 
-    <!-- Load D3.js -->
+    <!-- Load D3.js and topojson -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
     <script>
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
+        const geojsonURL = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.geojson"; // URL to US states GeoJSON
 
-        const margin = { top: 50, right: 50, bottom: 100, left: 150 };
-        const width = 1200 - margin.left - margin.right;
-        const height = 600 - margin.top - margin.bottom;
+        const width = 1200;
+        const height = 600;
 
-        const svg = d3.select("#heatmap")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+        const svg = d3.select("#map")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-        // Load and process data
-        d3.csv(dataURL).then(function(data) {
-            // Convert data to numbers
+        const projection = d3.geoAlbersUsa()
+            .translate([width / 2, height / 2])
+            .scale([1000]);
+
+        const path = d3.geoPath().projection(projection);
+
+        // Load GeoJSON and data
+        Promise.all([
+            d3.json(geojsonURL),
+            d3.csv(dataURL)
+        ]).then(function([geojson, data]) {
+            // Convert data to a usable format
             const stateData = data.map(d => ({
                 state: d.state,
                 cases: +d.cases // or use 'deaths' if that's your metric
             }));
 
-            // Extract unique states
-            const states = Array.from(new Set(stateData.map(d => d.state)));
+            const stateCases = {};
+            stateData.forEach(d => {
+                stateCases[d.state] = d.cases;
+            });
+
+            // Create color scale
             const maxCases = d3.max(stateData, d => d.cases);
-
-            // Define scales
-            const x = d3.scaleBand()
-                .domain(states)
-                .range([0, width])
-                .padding(0.1);
-
-            const y = d3.scaleBand()
-                .domain([0]) // Single row since we're only showing states horizontally
-                .range([height, 0]);
-
-            const color = d3.scaleSequential(d3.interpolateReds)
+            const colorScale = d3.scaleSequential(d3.interpolateReds)
                 .domain([0, maxCases]);
 
-            // Draw the heatmap cells
-            svg.selectAll(".cell")
-                .data(stateData)
-                .enter().append("rect")
-                .attr("class", "cell")
-                .attr("x", d => x(d.state))
-                .attr("y", 0)
-                .attr("width", x.bandwidth())
-                .attr("height", y.bandwidth())
-                .attr("fill", d => color(d.cases));
-
-            // Add x-axis
-            svg.append("g")
-                .attr("class", "x-axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickSize(0).tickPadding(10))
-                .selectAll("text")
-                .attr("transform", "rotate(-45)")
-                .style("text-anchor", "end");
+            // Draw map
+            svg.selectAll("path")
+                .data(geojson.features)
+                .enter().append("path")
+                .attr("d", path)
+                .attr("fill", d => {
+                    const state = d.properties.name;
+                    return colorScale(stateCases[state] || 0);
+                })
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1);
 
             // Add color legend
-            const legendWidth = 400;
+            const legendWidth = 300;
             const legendHeight = 20;
             const legend = svg.append("g")
-                .attr("transform", `translate(${width + 30}, 0)`)
+                .attr("transform", `translate(${width - 350},${height - 100})`)
                 .attr("class", "color-legend");
 
             const legendScale = d3.scaleLinear()
                 .domain([0, maxCases])
                 .range([0, legendWidth]);
 
-            const legendAxis = d3.axisRight(legendScale)
+            const legendAxis = d3.axisBottom(legendScale)
                 .ticks(5)
                 .tickFormat(d3.format(".0s"));
 
@@ -114,8 +121,8 @@
                 .attr("y2", "0%")
                 .selectAll("stop")
                 .data([
-                    { offset: "0%", color: color(0) },
-                    { offset: "100%", color: color(maxCases) }
+                    { offset: "0%", color: colorScale(0) },
+                    { offset: "100%", color: colorScale(maxCases) }
                 ])
                 .enter().append("stop")
                 .attr("offset", d => d.offset)
