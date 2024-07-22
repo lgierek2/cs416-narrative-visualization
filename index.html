@@ -234,6 +234,19 @@
                     svg.append("g")
                         .attr("class", "y-axis")
                         .call(d3.axisLeft(y).tickSize(0));
+                    
+                    svg.append("text")
+                        .attr("class", "x-axis-label")
+                        .attr("text-anchor", "middle")
+                        .attr("x", width / 2)
+                        .attr("y", height + margin.bottom - 10)
+                        .text("States");    
+                    
+                    svg.append("text")
+                        .attr("class", "y-axis-label")
+                        .attr("text-anchor", "middle")
+                        .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+                        .text("Number of Cases");
 
                     // Optional: Add color legend
                     const legend = svg.append("g")
@@ -328,6 +341,21 @@
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y));
+                // Add X axis label for slide 2
+                svg.append("text")
+                    .attr("class", "x-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .text("Date");
+
+                // Add Y axis label for slide 2
+                svg.append("text")
+                    .attr("class", "y-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+                    .text("Number of Cases/Deaths");
+                
                 // Add a legend
                 const legend = svg.append("g")
                     .attr("class", "legend")
@@ -411,6 +439,21 @@
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y));
+                // Add X axis label for slide 3
+                svg.append("text")
+                    .attr("class", "x-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 10)
+                    .text("States");
+
+                // Add Y axis label for slide 3
+                svg.append("text")
+                    .attr("class", "y-axis-label")
+                    .attr("text-anchor", "middle")
+                    .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
+                    .text("Number of Cases/Deaths");
+                    
                 const legend = svg.append("g")
                     .attr("class", "legend")
                     .attr("transform", `translate(${width - 150},10)`);
