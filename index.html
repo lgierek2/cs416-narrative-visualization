@@ -85,13 +85,13 @@
         <div class="pagination">
             <ul id="mainMenu">
                 <li><a href="#" id="Slide1" onclick="changeSlide(1)">Nationwide Overview</a></li>
-                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases and Deaths over Time</a></li>
+                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases Over Time</a></li>
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
                 <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
             </ul>
         </div>
         <select id="stateDropdown" onchange="updateState()">
-            <option value="">Select State</option>
+            <option value="">All States</option>
         </select>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
@@ -114,7 +114,7 @@
         ];
         const yAxisLabels = [
             "Heatmap of Cases",
-            "Total Cases and Deaths over Time",
+            "Total Cases Over Time",
             "Detailed State Comparison"
         ];
         const xAxisLabel = "Date";
@@ -202,15 +202,9 @@
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
 
             } else if (slideNumber === 2) {
-                // Render Line Chart for Cases and Deaths over Time
                 const x = d3.scaleTime()
                     .domain(d3.extent(data, d => d.date))
                     .range([0, width]);
-
-                const y = d3.scaleLog()
-                    .domain([1, d3.max(data, d => Math.max(d.cases, d.deaths))])
-                    .nice()
-                    .range([height, 0]);
 
                 const lineCases = d3.line()
                     .x(d => x(d.date))
@@ -227,7 +221,6 @@
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html("Hover over the lines for detailed information")
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px");
                     })
@@ -242,7 +235,6 @@
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html("Hover over the lines for detailed information")
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px");
                     })
