@@ -62,12 +62,16 @@
         .line-deaths {
             stroke: #ff7f0e;
         }
+        .legend rect {
+            width: 20px;
+            height: 20px;
+        }
         #tooltip {
             position: absolute;
-            padding: 8px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            font-size: 12px;
             pointer-events: none;
             opacity: 0;
         }
@@ -87,7 +91,6 @@
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
     <main id="myData"></main>
-    <div id="tooltip"></div>
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
@@ -96,13 +99,6 @@
         const width = 2000 - margin.left - margin.right;
         const height = 800 - margin.top - margin.bottom;
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
-        const yAxisDomains = [
-            [0, 3000000],   // 0 - GDP
-            [0, 30],        // 1 - Inflation
-            [0, 50],        // 2 - Interest Rate
-            [0, 80],        // 3 - Gov. Debt
-            [0, 7],         // 4 - Exchange Rate
-        ];
         const yAxisLabels = [
             "Heatmap of Cases",
             "Total Cases and Deaths over Time",
@@ -161,7 +157,7 @@
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html(`State: ${d.state}<br>Cases: ${d.cases}`);
+                            .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`);
                     })
                     .on("mousemove", function(event) {
                         d3.select("#tooltip")
@@ -184,19 +180,17 @@
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
 
             } else if (slideNumber === 2) {
-                // Render Line Chart for Cases and Deaths over Time with Dual Y-Axes
+                // Render Line Chart for Cases and Deaths over Time
                 const x = d3.scaleTime()
                     .domain(d3.extent(data, d => d.date))
                     .range([0, width]);
 
-                const yCases = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.cases)])
-                    .nice()
+                const yCases = d3.scaleLog()
+                    .domain([1, d3.max(data, d => d.cases)]) // Logarithmic scale, avoid zero
                     .range([height, 0]);
 
-                const yDeaths = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.deaths)])
-                    .nice()
+                const yDeaths = d3.scaleLog()
+                    .domain([1, d3.max(data, d => d.deaths)]) // Logarithmic scale, avoid zero
                     .range([height, 0]);
 
                 const lineCases = d3.line()
@@ -211,10 +205,10 @@
                     .datum(data)
                     .attr("class", "line line-cases")
                     .attr("d", lineCases)
-                    .on("mouseover", function(event, d) {
+                    .on("mouseover", function() {
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html(`Cases: ${d.cases}`);
+                            .html(`Cases: ${d3.format(",")(d3.max(data, d => d.cases))}`);
                     })
                     .on("mousemove", function(event) {
                         d3.select("#tooltip")
@@ -229,15 +223,15 @@
                     .datum(data)
                     .attr("class", "line line-deaths")
                     .attr("d", lineDeaths)
-                    .on("mouseover", function(event, d) {
+                    .on("mouseover", function() {
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html(`Deaths: ${d.deaths}`);
+                            .html(`Deaths: ${d3.format(",")(d3.max(data, d => d.deaths))}`);
                     })
                     .on("mousemove", function(event) {
                         d3.select("#tooltip")
                             .style("top", (event.pageY - 10) + "px")
-                            .style("left", (event.pageX + 10) + "px");
+
                     })
                     .on("mouseout", function() {
                         d3.select("#tooltip").style("opacity", 0);
@@ -249,32 +243,22 @@
                     .attr("transform", `translate(0,${height})`)
                     .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(d3.timeFormat("%b %Y")));
 
-                // Add primary y-axis for cases
+                // Add y-axis for cases
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .call(d3.axisLeft(yCases).ticks(10).tickFormat(d3.format(".0s")))
-                    .append("text")
-                    .attr("fill", "#000")
-                    .attr("x", 6)
-                    .attr("y", -10)
-                    .attr("text-anchor", "start")
-                    .text("Cases");
+                    .attr("transform", "translate(0,0)")
+                    .call(d3.axisLeft(yCases).ticks(10, d3.format(".0s")));
 
-                // Add secondary y-axis for deaths
+                // Add y-axis for deaths
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .attr("transform", `translate(${width},0)`)
-                    .call(d3.axisRight(yDeaths).ticks(10).tickFormat(d3.format(".0s")))
-                    .append("text")
-                    .attr("fill", "#000")
-                    .attr("x", 6)
-                    .attr("y", -10)
-                    .attr("text-anchor", "start")
-                    .text("Deaths");
+                    .attr("transform", `translate(${width}, 0)`)
+                    .call(d3.axisRight(yDeaths).ticks(10, d3.format(".0s")));
 
-                // Add Legend
+                // Add legend
                 const legend = svg.append("g")
-                    .attr("transform", `translate(${width - 150},10)`);
+                    .attr("class", "legend")
+                    .attr("transform", `translate(${width - 150}, 20)`);
 
                 legend.append("rect")
                     .attr("x", 0)
@@ -286,8 +270,7 @@
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 15)
-                    .text("Cases")
-                    .style("fill", "#1f77b4");
+                    .text("Cases");
 
                 legend.append("rect")
                     .attr("x", 0)
@@ -299,55 +282,37 @@
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 45)
-                    .text("Deaths")
-                    .style("fill", "#ff7f0e");
+                    .text("Deaths");
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-            } else if (slideNumber === 3) {
-                // Render Bar Chart for Detailed State Comparison
+
+            } else {
+                // Render other visualizations for different slides
                 const x = d3.scaleBand()
                     .domain(data.map(d => d.state))
                     .range([0, width])
                     .padding(0.1);
                 const y = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.cases)])
+                    .domain([0, d3.max(data, d => d[Object.keys(d)[slideNumber]])])
                     .nice()
                     .range([height, 0]);
-
                 svg.selectAll(".bar")
                     .data(data)
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", d => x(d.state))
-                    .attr("y", d => y(d.cases))
+                    .attr("y", d => y(d[Object.keys(d)[slideNumber]]))
                     .attr("width", x.bandwidth())
-                    .attr("height", d => height - y(d.cases))
-                    .on("mouseover", function(event, d) {
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`);
-                    })
-                    .on("mousemove", function(event) {
-                        d3.select("#tooltip")
-                            .style("top", (event.pageY - 10) + "px")
-                            .style("left", (event.pageX + 10) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    });
+                    .attr("height", d => height - y(d[Object.keys(d)[slideNumber]]));
 
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).tickSize(0))
-                    .selectAll("text")
-                    .attr("transform", "rotate(-45)")
-                    .style("text-anchor", "end");
+                    .call(d3.axisBottom(x));
 
                 svg.append("g")
                     .attr("class", "y-axis")
                     .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
-
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
             }
         }
@@ -366,8 +331,16 @@
 
         function nextSlide() {
             currentSlide = (currentSlide % 3) + 1;
-            changeSlide(currentSlide);
+            d3.csv(dataURL).then(function(data) {
+                data.forEach(d => {
+                    d.date = new Date(d.date);
+                    d.cases = +d.cases;
+                    d.deaths = +d.deaths;
+                });
+                renderSlide(currentSlide, data);
+            });
         }
     </script>
+    <div id="tooltip"></div>
 </body>
 </html>
