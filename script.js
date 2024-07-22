@@ -265,7 +265,7 @@ function renderSlide(slideNumber) {
             .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("");
+            .text("1M U.S. Citizens Vaccinated");
 
         svg.append("line")
             .attr("x1", x(new Date('2021-12-01')))
