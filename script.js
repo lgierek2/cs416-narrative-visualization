@@ -290,7 +290,7 @@ function renderSlide(slideNumber) {
             .style("stroke-dasharray", "4");
          svg.append("text")
             .attr("x", x(new Date('2021-01-20')))
-            .attr("y", -10)
+            .attr("y", 0)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text("Federal Mask Mandate");
