@@ -246,6 +246,23 @@
                         .attr("text-anchor", "middle")
                         .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
                         .text("Number of Cases");
+                    
+                    var annotations = [
+                        { x: "California", y: 150, text: "California had the most COVID cases" },
+                        { x: "New York", y: 200, text: "New York was the state with the second most number of cases" }
+                    ];
+
+                    svg.selectAll(".annotation") // Select all annotation elements
+                        .data(annotations) // Bind the annotations data
+                        .enter().append("text") // Append text elements for each annotation
+                        .attr("class", "annotation") // Add a class for styling
+                        .attr("x", function(d) { return xScale(d.x); }) // Set x position based on the xScale
+                        .attr("y", function(d) { return yScale(d.y); }) // Set y position based on the yScale
+                        .attr("dy", "-0.5em") // Adjust vertical position
+                        .attr("text-anchor", "middle") // Center the text
+                        .text(function(d) { return d.text; }) // Set the text of the annotation
+                        .style("font-size", "12px") // Style the font size
+                        .style("fill", "black"); // Style the font color
 
                     // Optional: Add color legend
                     const legend = svg.append("g")
