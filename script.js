@@ -123,7 +123,7 @@ function renderSlide(slideNumber) {
                 .text(`Highest Cases in ${lowestCasesState.state}`); 
 
             svg.append("text")
-                .attr("x", width)
+                .attr("x", width-50)
                 .attr("y", 10)
                 .style("font-size", "12px")
                 .text("Darker shades represent higher case numbers");
@@ -274,7 +274,7 @@ function renderSlide(slideNumber) {
             .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("VACCINE");
+            .text("1 Million U.S. Citizens receive vaccines");
 
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }   
