@@ -251,7 +251,7 @@ function renderSlide(slideNumber) {
             .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("U.S. declares National Emergency - March 2020");
+            .text("U.S. declares National Emergency");
 
         svg.append("line")
             .attr("x1", x(new Date('2020-12-24')))
