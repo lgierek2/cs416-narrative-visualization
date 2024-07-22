@@ -102,6 +102,16 @@ function renderSlide(slideNumber) {
                 .attr("text-anchor", "middle")
                 .attr("transform", `translate(${-margin.left / 2},${height / 2}) rotate(-90)`)
                 .text("Number of Cases");
+            
+            const highestCasesState = data.reduce((max, d) => d.cases > max.cases ? d : max, data[0]);
+            svg.append("text")
+                .attr("x", x(highestCasesState.state) + x.bandwidth() / 2)
+                .attr("y", y("Cases") - 10)
+                .attr("text-anchor", "middle")
+                .style("font-size", "12px")
+                .style("font-weight", "bold")
+                .text("Highest Cases");
+                
 
             const legend = svg.append("g")
                 .attr("class", "legend")
@@ -143,7 +153,7 @@ function renderSlide(slideNumber) {
             .datum(data)
             .attr("class", "line line-cases")
             .attr("d", lineCases)
-            .style("stroke", "steelblue")
+            .style("stroke", "blue")
             .on("mouseover", function(event, d) {
             })
             .on("mousemove", function(event) {
@@ -208,7 +218,7 @@ function renderSlide(slideNumber) {
         legend.append("rect")
             .attr("width", 20)
             .attr("height", 20)
-            .style("fill", "steelblue");
+            .style("fill", "blue");
         legend.append("text")
             .attr("x", 30)
             .attr("y", 15)
@@ -242,7 +252,7 @@ else if (slideNumber === 3) {
             .attr("y", d => y(d.cases))
             .attr("width", x.bandwidth() / 2)
             .attr("height", d => height - y(d.cases))
-            .style("fill", "steelblue")
+            .style("fill", "blue")
             .on("mouseover", function(event, d) {
                 d3.select("#tooltip")
                     .style("opacity", 1)
@@ -300,7 +310,7 @@ else if (slideNumber === 3) {
         legend.append("rect")
             .attr("width", 20)
             .attr("height", 20)
-            .style("fill", "steelblue");
+            .style("fill", "blue");
         legend.append("text")
             .attr("x", 30)
             .attr("y", 15)
