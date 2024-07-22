@@ -188,7 +188,7 @@
 
                     // Create scales
                     const x = d3.scaleBand()
-                        .domain(data.map(d => d.state))
+                        .domain(data.map(d => d.state).sort())  // Sort states alphabetically
                         .range([0, width])
                         .padding(0.1);
 
@@ -225,8 +225,10 @@
                     svg.append("g")
                         .attr("class", "x-axis")
                         .attr("transform", `translate(0,${height})`)
+                        .call(d3.axisBottom(x))
+                        .selectAll("text")
                         .attr("transform", "rotate(-45)")
-                        .call(d3.axisBottom(x));
+                        .style("text-anchor", "end");
 
                     // Add Y axis
                     svg.append("g")
@@ -257,7 +259,7 @@
                         .attr("y", (d, i) => i * 20 + 15)
                         .text(d => d);
 
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
+                    d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
 
                 });
             } else if (slideNumber === 2) {
