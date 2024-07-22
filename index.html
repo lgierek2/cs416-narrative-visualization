@@ -78,18 +78,18 @@
             height: 20px;
         }
         .button {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 10px 0;
-        font-size: 16px;
-        text-align: center;
-        text-decoration: none;
-        color: white; 
-        background-color: skyblue; 
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s, box-shadow 0.3s;
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: white; 
+            background-color: skyblue; 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .button:hover {
             background-color: #6CA6CF; 
@@ -107,6 +107,12 @@
             justify-content: center;
             align-items: center; 
         }
+        .slide {
+            display: none;
+        }
+        .slide.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -115,8 +121,7 @@
         <div class="pagination">
             <ul id="mainMenu">
                 <li><a href="#" id="Slide1" onclick="changeSlide(1)">Nationwide Overview</a></li>
-                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases
-                and Deaths Over Time</a></li>
+                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases and Deaths Over Time</a></li>
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
                 <li><a href="#" id="buttonNext" class="button" onclick="nextSlide()">Next Scene</a></li>
             </ul>
@@ -126,13 +131,22 @@
         </select>
         <span id="graphDescriptionText" class="graphOrientations"></span>
     </header>
-    <main id="myData"></main>
+    <main>
+        <div id="slide1" class="slide">
+            <div id="map"></div>
+        </div>
+        <div id="slide2" class="slide">
+        </div>
+        <div id="slide3" class="slide">
+        </div>
+    </main>
     <footer>
         <span id="orientationText" class="orientations">Hover over data points to view information.</span>
     </footer>
     <div id="tooltip" class="tooltip"></div>
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
