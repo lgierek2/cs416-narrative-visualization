@@ -285,12 +285,12 @@ function renderSlide(slideNumber) {
             .attr("x1", x(new Date('2021-02-01')))
             .attr("x2", x(new Date('2021-02-01')))
             .attr("y1", 0)
-            .attr("y2", height)
+            .attr("y2", height - 25)
             .style("stroke", "black")
             .style("stroke-dasharray", "4");
          svg.append("text")
             .attr("x", x(new Date('2021-02-01')))
-            .attr("y", 0)
+            .attr("y", 25)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text("Federal Mask Mandate");
@@ -304,7 +304,7 @@ function renderSlide(slideNumber) {
             .style("stroke-dasharray", "4");
          svg.append("text")
             .attr("x", x(new Date('2022-04-27')))
-            .attr("y", 0)
+            .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
             .text("Federal Mask Mandate ends");
