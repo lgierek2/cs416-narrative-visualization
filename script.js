@@ -274,7 +274,7 @@ function renderSlide(slideNumber) {
             .attr("y", -10)
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
-            .text("1 Million U.S. Citizens receive vaccines");
+            .text("VACCINE");
 
         d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
     }   
