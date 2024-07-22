@@ -7,7 +7,7 @@ const svgWidth = 960;
 const svgHeight = 600;
 
 // Load data
-d3.csv("us-states.csv").then(data => {
+d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
     // Convert date strings to Date objects
     data.forEach(d => {
         d.date = new Date(d.date);
@@ -248,7 +248,7 @@ function handleStateSelection() {
 
 // Function to update bar chart based on selected state
 function updateBarChartForState(state) {
-    d3.csv("us-states.csv").then(data => {
+    d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
         const filteredData = data.filter(d => d.state === state);
         const svg = d3.select("#bar-chart-svg").select("g");
         
@@ -293,7 +293,7 @@ function processStateList(data) {
 
 // Initial function to set up all components
 function initialize() {
-    d3.csv("us-states.csv").then(data => {
+    d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
         processStateList(data);
         handleStateSelection();
     });
