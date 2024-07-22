@@ -41,7 +41,11 @@
         }
         #myData {
             width: 100%;
-            height: 800px;
+            height: 800px; 
+        }
+        #stateDropdown {
+            display: none;
+        }
         }
         .bar {
             fill: steelblue;
@@ -112,185 +116,182 @@
         });
 
         function renderSlide(slideNumber, data) {
-            d3.select("#myData svg").remove();
-            const svg = d3.select("#myData")
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    // Remove existing SVG
+    d3.select("#myData svg").remove();
+    const svg = d3.select("#myData")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            if (slideNumber === 1) {
-                // Render Heatmap for Nationwide Overview
-                const colorScale = d3.scaleSequential(d3.interpolateViridis)
-                    .domain([0, d3.max(data, d => +d.cases)]);
+    // Remove or hide dropdown initially
+    d3.select("#stateDropdown").remove();
 
-                const x = d3.scaleBand()
-                    .domain(data.map(d => d.state))
-                    .range([0, width])
-                    .padding(0.1);
+    if (slideNumber === 1) {
+        // Render Heatmap for Nationwide Overview
+        const colorScale = d3.scaleSequential(d3.interpolateViridis)
+            .domain([0, d3.max(data, d => +d.cases)]);
 
-                const y = d3.scaleBand()
-                    .domain(data.map(d => d.state))
-                    .range([height, 0])
-                    .padding(0.1);
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.state))
+            .range([0, width])
+            .padding(0.1);
 
-                svg.selectAll(".cell")
-                    .data(data)
-                    .enter().append("rect")
-                    .attr("class", "cell")
-                    .attr("x", d => x(d.state))
-                    .attr("y", d => y(d.state))
-                    .attr("width", x.bandwidth())
-                    .attr("height", y.bandwidth())
-                    .style("fill", d => colorScale(+d.cases));
+        const y = d3.scaleBand()
+            .domain(data.map(d => d.state))
+            .range([height, 0])
+            .padding(0.1);
 
-                svg.append("g")
-                    .attr("class", "x-axis")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x));
+        svg.selectAll(".cell")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "cell")
+            .attr("x", d => x(d.state))
+            .attr("y", d => y(d.state))
+            .attr("width", x.bandwidth())
+            .attr("height", y.bandwidth())
+            .style("fill", d => colorScale(+d.cases));
 
-                svg.append("g")
-                    .attr("class", "y-axis")
-                    .call(d3.axisLeft(y).tickSize(0));
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
 
-                d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-                
-            } else if (slideNumber === 2) {
-                // Render Cases and Deaths over Time
-                const x = d3.scaleTime()
-                    .domain(d3.extent(data, d => new Date(d.date)))
-                    .range([0, width]);
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y).tickSize(0));
 
-                const yCases = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => +d.cases)])
-                    .nice()
-                    .range([height / 2, 0]);
+        d3.select("#graphDescriptionText").text("Nationwide Overview");
 
-                const yDeaths = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => +d.deaths)])
-                    .nice()
-                    .range([height, height / 2]);
+    } else if (slideNumber === 2) {
+        // Render Cases and Deaths over Time
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.date))
+            .range([0, width])
+            .padding(0.1);
 
-                svg.append("path")
-                    .data([data])
-                    .attr("class", "line")
-                    .attr("fill", "none")
-                    .attr("stroke", "steelblue")
-                    .attr("stroke-width", 1.5)
-                    .attr("d", d3.line()
-                        .x(d => x(new Date(d.date)))
-                        .y(d => yCases(d.cases))
-                    );
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => +d.cases)])
+            .nice()
+            .range([height, 0]);
 
-                svg.append("path")
-                    .data([data])
-                    .attr("class", "line")
-                    .attr("fill", "none")
-                    .attr("stroke", "red")
-                    .attr("stroke-width", 1.5)
-                    .attr("d", d3.line()
-                        .x(d => x(new Date(d.date)))
-                        .y(d => yDeaths(d.deaths))
-                    );
+        svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.date))
+            .attr("y", d => y(d.cases))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.cases));
 
-                svg.append("g")
-                    .attr("class", "x-axis")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x));
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%b %d")))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
 
-                svg.append("g")
-                    .attr("class", "y-axis")
-                    .attr("transform", `translate(0,0)`)
-                    .call(d3.axisLeft(yCases).ticks(5).tickFormat(d3.format(".0s")));
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
 
-                svg.append("g")
-                    .attr("class", "y-axis")
-                    .attr("transform", `translate(0,${height / 2})`)
-                    .call(d3.axisLeft(yDeaths).ticks(5).tickFormat(d3.format(".0s")));
+        d3.select("#graphDescriptionText").text("Cases and Deaths over Time");
 
-                d3.select("#graphDescriptionText").text("Cases and Deaths over Time");
+        // Show the dropdown for selecting states
+        const dropdown = d3.select("body").append("select")
+            .attr("id", "stateDropdown")
+            .attr("name", "states");
 
-            } else if (slideNumber === 3) {
-                // Render Detailed State Comparison
-                const sortedData = data.sort((a, b) => d3.ascending(a.state, b.state));
+        dropdown.selectAll("option")
+            .data(sortedData.map(d => d.state))
+            .enter().append("option")
+            .attr("value", d => d)
+            .text(d => d);
 
-                const x = d3.scaleBand()
-                    .domain(sortedData.map(d => d.state))
-                    .range([0, width])
-                    .padding(0.1);
+        dropdown.on("change", function() {
+            const selectedState = this.value;
+            const filteredData = data.filter(d => d.state === selectedState);
+            
+            svg.selectAll(".bar").remove();
 
-                const y = d3.scaleLinear()
-                    .domain([0, d3.max(sortedData, d => +d.cases)])
-                    .nice()
-                    .range([height, 0]);
-
-                svg.selectAll(".bar")
-                    .data(sortedData)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.state))
-                    .attr("y", d => y(d.cases))
-                    .attr("width", x.bandwidth())
-                    .attr("height", d => height - y(d.cases));
-
-                svg.append("g")
-                    .attr("class", "x-axis")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x))
-                    .selectAll("text")
-                    .attr("transform", "rotate(-45)")
-                    .style("text-anchor", "end");
-
-                svg.append("g")
-                    .attr("class", "y-axis")
-                    .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
-
-                // Dropdown for state selection
-                d3.select("body").append("select")
-                    .attr("id", "stateDropdown")
-                    .attr("name", "states")
-                    .selectAll("option")
-                    .data(sortedData.map(d => d.state))
-                    .enter().append("option")
-                    .attr("value", d => d)
-                    .text(d => d);
-
-                d3.select("#stateDropdown").on("change", function() {
-                    const selectedState = this.value;
-                    const filteredData = data.filter(d => d.state === selectedState);
-                    
-                    // Update chart with selected state data
-                    svg.selectAll(".bar").remove();
-                    
-                    svg.selectAll(".bar")
-                        .data(filteredData)
-                        .enter().append("rect")
-                        .attr("class", "bar")
-                        .attr("x", d => x(d.state))
-                        .attr("y", d => y(d.cases))
-                        .attr("width", x.bandwidth())
-                        .attr("height", d => height - y(d.cases));
-                });
-
-                d3.select("#graphDescriptionText").text("Detailed State Comparison");
-
-                }
-            }
-
-        function changeSlide(slideNumber) {
-            currentSlide = slideNumber;
-            d3.csv(dataURL).then(function(data) {
-            renderSlide(currentSlide, data);
-            });
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide % 3) + 1;
-            d3.csv(dataURL).then(function(data) {
-            renderSlide(currentSlide, data);
+            svg.selectAll(".bar")
+                .data(filteredData)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.date))
+                .attr("y", d => y(d.cases))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.cases));
         });
+
+    } else if (slideNumber === 3) {
+        // Render Detailed State Comparison
+        const sortedData = data.sort((a, b) => d3.ascending(a.state, b.state));
+        const x = d3.scaleBand()
+            .domain(sortedData.map(d => d.state))
+            .range([0, width])
+            .padding(0.1);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => +d.cases)])
+            .nice()
+            .range([height, 0]);
+
+        svg.selectAll(".bar")
+            .data(sortedData)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.state))
+            .attr("y", d => y(d.cases))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.cases));
+
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+
+        svg.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".0s")));
+
+        // Show the dropdown for selecting states
+        const dropdown = d3.select("body").append("select")
+            .attr("id", "stateDropdown")
+            .attr("name", "states");
+
+        dropdown.selectAll("option")
+            .data(sortedData.map(d => d.state))
+            .enter().append("option")
+            .attr("value", d => d)
+            .text(d => d);
+
+        dropdown.on("change", function() {
+            const selectedState = this.value;
+            const filteredData = data.filter(d => d.state === selectedState);
+
+            svg.selectAll(".bar").remove();
+
+            svg.selectAll(".bar")
+                .data(filteredData)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.state))
+                .attr("y", d => y(d.cases))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.cases));
+        });
+
+        d3.select("#graphDescriptionText").text("Detailed State Comparison");
+
+    }
 }
+
     </script>
 </body>
 </html>
