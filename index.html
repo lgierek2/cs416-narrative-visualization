@@ -328,12 +328,15 @@
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
             }   
-        else if (slideNumber === 3) {
+            else if (slideNumber === 3) {
                 // Render Bar Graph for Cases and Deaths per State
-                const statesSorted = data.map(d => d.state).filter((value, index, self) => self.indexOf(value) === index).sort();
 
+                // Extract and sort unique states alphabetically
+                const statesSorted = Array.from(new Set(data.map(d => d.state))).sort();
+
+                // Create x and y scales
                 const x = d3.scaleBand()
-                    .domain(data.map(d => d.state))
+                    .domain(statesSorted)  // Use the sorted states for the x-axis
                     .range([0, width])
                     .padding(0.1);
 
@@ -342,6 +345,7 @@
                     .nice()
                     .range([height, 0]);
 
+                // Render bars for cases
                 svg.selectAll(".bar-cases")
                     .data(data)
                     .enter().append("rect")
@@ -362,6 +366,7 @@
                         d3.select("#tooltip").style("opacity", 0);
                     });
 
+                // Render bars for deaths
                 svg.selectAll(".bar-deaths")
                     .data(data)
                     .enter().append("rect")
@@ -397,7 +402,7 @@
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
             }
-        }
+
 
         function updateState() {
             const selectedState = document.getElementById("stateDropdown").value;
