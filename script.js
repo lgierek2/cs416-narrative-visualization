@@ -2,7 +2,7 @@
 const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 const width = 960 - margin.left - margin.right;
 const height = 600 - margin.top - margin.bottom;
-const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 1000]);
+const colorScale = d3.scaleSequential(d3.interpolateRed).domain([0, 1000]);
 const svgWidth = 960;
 const svgHeight = 600;
 
@@ -46,24 +46,26 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         document.querySelector("#line-chart").style.display = "none";
         document.querySelector("#bar-chart").style.display = "block";
     });
+
+    // Initialize dropdown
+    processStateList(data);
+    handleStateSelection();
 });
 
 // Function to process heatmap data
 function processHeatmapData(data) {
-    // Example processing
-    // Aggregate data by state and date
-    const heatmapData = d3.nest()
-        .key(d => d.state)
-        .key(d => d.date.toISOString().split('T')[0])  // Only date part
-        .rollup(v => d3.sum(v, d => d.cases))
-        .entries(data);
-    
-    return heatmapData;
+    const heatmapData = d3.group(data, d => d.state, d => d.date.toISOString().split('T')[0]);
+    return Array.from(heatmapData, ([state, dates]) => ({
+        state,
+        values: Array.from(dates, ([date, records]) => ({
+            date,
+            cases: d3.sum(records, d => d.cases)
+        }))
+    }));
 }
 
 // Function to draw heatmap
 function drawHeatmap(data) {
-    // SVG setup
     const svg = d3.select("#heatmap-svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
@@ -73,20 +75,21 @@ function drawHeatmap(data) {
     // Create scales
     const xScale = d3.scaleBand().range([0, width]).padding(0.1);
     const yScale = d3.scaleBand().range([height, 0]).padding(0.1);
-    
-    xScale.domain(data.map(d => d.key));
-    yScale.domain(data.flatMap(d => d.values.map(v => v.key)));
+
+    const allDates = Array.from(new Set(data.flatMap(d => d.values.map(v => v.date))));
+    xScale.domain(allDates);
+    yScale.domain(data.map(d => d.state));
 
     // Draw heatmap
     svg.selectAll("rect")
-        .data(data.flatMap(d => d.values.map(v => ({ ...v, state: d.key }))))
+        .data(data.flatMap(d => d.values.map(v => ({ ...v, state: d.state }))))
         .enter()
         .append("rect")
-        .attr("x", d => xScale(d.state))
-        .attr("y", d => yScale(d.key))
+        .attr("x", d => xScale(d.date))
+        .attr("y", d => yScale(d.state))
         .attr("width", xScale.bandwidth())
         .attr("height", yScale.bandwidth())
-        .style("fill", d => colorScale(d.value));
+        .style("fill", d => colorScale(d.cases));
 
     // Add axes
     svg.append("g")
@@ -121,22 +124,19 @@ function drawHeatmap(data) {
 
 // Function to process line chart data
 function processLineChartData(data) {
-    // Example processing
-    // Group data by date and calculate total cases and deaths
-    const lineChartData = d3.nest()
-        .key(d => d.date.toISOString().split('T')[0])
-        .rollup(v => ({
-            totalCases: d3.sum(v, d => d.cases),
-            totalDeaths: d3.sum(v, d => d.deaths)
-        }))
-        .entries(data);
-    
+    const lineChartData = d3.group(data, d => d.date.toISOString().split('T')[0])
+        .entries()
+        .map(([date, records]) => ({
+            date: new Date(date),
+            totalCases: d3.sum(records, d => d.cases),
+            totalDeaths: d3.sum(records, d => d.deaths)
+        }));
+
     return lineChartData;
 }
 
 // Function to draw line chart
 function drawLineChart(data) {
-    // SVG setup
     const svg = d3.select("#line-chart-svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
@@ -147,17 +147,17 @@ function drawLineChart(data) {
     const xScale = d3.scaleTime().range([0, width]);
     const yScale = d3.scaleLinear().range([height, 0]);
 
-    xScale.domain(d3.extent(data, d => new Date(d.key)));
-    yScale.domain([0, d3.max(data, d => Math.max(d.value.totalCases, d.value.totalDeaths))]);
+    xScale.domain(d3.extent(data, d => d.date));
+    yScale.domain([0, d3.max(data, d => Math.max(d.totalCases, d.totalDeaths))]);
 
     // Line generators
     const lineCases = d3.line()
-        .x(d => xScale(new Date(d.key)))
-        .y(d => yScale(d.value.totalCases));
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.totalCases));
     
     const lineDeaths = d3.line()
-        .x(d => xScale(new Date(d.key)))
-        .y(d => yScale(d.value.totalDeaths));
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.totalDeaths));
 
     // Draw lines
     svg.append("path")
@@ -190,7 +190,6 @@ function drawLineChart(data) {
 
 // Function to draw bar chart
 function drawBarChart(data) {
-    // SVG setup
     const svg = d3.select("#bar-chart-svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
@@ -198,106 +197,6 @@ function drawBarChart(data) {
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // Create scales
-    const xScale = d3.scaleBand().range([0, width]).padding(0.1);
-    const yScale = d3.scaleLinear().range([height, 0]);
-
-    xScale.domain(data.map(d => d.state));
-    yScale.domain([0, d3.max(data, d => d.cases)]);
-
-    // Draw bars
-    svg.selectAll(".bar")
-        .data(data)
-        .enter()
-        .append("rect")
-        .attr("class", "bar")
-        .attr("x", d => xScale(d.state))
-        .attr("y", d => yScale(d.cases))
-        .attr("width", xScale.bandwidth())
-        .attr("height", d => height - yScale(d.cases))
-        .style("fill", "steelblue")
-        .on("mouseover", function(event, d) {
-            d3.select(this).style("fill", "orange");
-            const [x, y] = d3.pointer(event);
-            d3.select("#tooltip")
-                .style("left", x + 5 + "px")
-                .style("top", y - 28 + "px")
-                .style("display", "inline-block")
-                .html(`State: ${d.state}<br>Cases: ${d.cases}`);
-        })
-        .on("mouseout", function() {
-            d3.select(this).style("fill", "steelblue");
-            d3.select("#tooltip").style("display", "none");
-        });
-
-    // Add axes
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xScale));
+    const xScale = d3.scaleBand().range([0, width]).padding};
     
-    svg.append("g")
-        .call(d3.axisLeft(yScale));
-}
-
-// Function to handle state selection in the dropdown
-function handleStateSelection() {
-    d3.select("#state-dropdown").on("change", function() {
-        const selectedState = d3.select(this).property("value");
-        updateBarChartForState(selectedState);
-    });
-}
-
-// Function to update bar chart based on selected state
-function updateBarChartForState(state) {
-    d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
-        const filteredData = data.filter(d => d.state === state);
-        const svg = d3.select("#bar-chart-svg").select("g");
-        
-        // Update bar chart
-        svg.selectAll(".bar")
-            .data(filteredData)
-            .transition()
-            .duration(750)
-            .attr("y", d => yScale(d.cases))
-            .attr("height", d => height - yScale(d.cases));
-        
-        svg.selectAll(".bar-text").remove();
-
-        svg.selectAll(".bar-text")
-            .data(filteredData)
-            .enter()
-            .append("text")
-            .attr("class", "bar-text")
-            .attr("x", d => xScale(d.state) + xScale.bandwidth() / 2)
-            .attr("y", d => yScale(d.cases) - 5)
-            .attr("text-anchor", "middle")
-            .text(d => d.cases);
-    });
-}
-
-// Function to initialize the dropdown with states
-function initializeDropdown(states) {
-    const dropdown = d3.select("#state-dropdown");
-    dropdown.selectAll("option")
-        .data(states)
-        .enter()
-        .append("option")
-        .attr("value", d => d)
-        .text(d => d);
-}
-
-// Function to process state list
-function processStateList(data) {
-    const states = Array.from(new Set(data.map(d => d.state)));
-    initializeDropdown(states);
-}
-
-// Initial function to set up all components
-function initialize() {
-    d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv").then(data => {
-        processStateList(data);
-        handleStateSelection();
-    });
-}
-
-// Call the initialize function on page load
-initialize();
+    initialize();
