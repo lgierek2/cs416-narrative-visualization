@@ -78,28 +78,25 @@
             height: 20px;
         }
         .button {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 10px 0;
-        font-size: 16px;
-        text-align: center;
-        text-decoration: none;
-        color: white; 
-        background-color: skyblue; 
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s, box-shadow 0.3s;
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: white; 
+            background-color: skyblue; 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
-
         .button:hover {
             background-color: #6CA6CF; 
         }
-
         .button:active {
             background-color: #4A8BC2;
         }
-
         .button:focus {
             outline: none;
         }
@@ -111,8 +108,7 @@
         <div class="pagination">
             <ul id="mainMenu">
                 <li><a href="#" id="Slide1" onclick="changeSlide(1)">Nationwide Overview</a></li>
-                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases
-                and Deaths Over Time</a></li>
+                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases and Deaths Over Time</a></li>
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
                 <li><a href="#" id="buttonNext" class="button" onclick="nextSlide()">Next Scene</a></li>
             </ul>
@@ -132,19 +128,12 @@
         const width = 2000 - margin.left - margin.right;
         const height = 800 - margin.top - margin.bottom;
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
-        const yAxisDomains = [
-            [0, 3000000],   // 0 - GDP
-            [0, 30],        // 1 - Inflation
-            [0, 50],        // 2 - Interest Rate
-            [0, 80],        // 3 - Gov. Debt
-            [0, 7],         // 4 - Exchange Rate
-        ];
         const yAxisLabels = [
             "Heatmap of Cases",
             "Total Cases and Deaths Over Time",
             "Detailed State Comparison"
         ];
-        const xAxisLabel = "Date";
+
         let data = [];
 
         // Initialize SVG
@@ -261,9 +250,9 @@
 
                         d3.select("#tooltip")
                             .style("opacity", 1)
-                            .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
+                        .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
                     })
                     .on("mouseout", function() {
                         d3.select("#tooltip").style("opacity", 0);
@@ -272,149 +261,136 @@
                 svg.append("path")
                     .datum(data)
                     .attr("class", "line line-deaths")
-                    .attr("d", lineDeaths)
-                    .on("mouseover", function(event, d) {
-                        // No need to show tooltip on mouseover, handled by mousemove
-                    })
-                    .on("mousemove", function(event) {
-                        const mouseDate = x.invert(d3.pointer(event)[0]);
-                        const closestData = data.reduce((prev, curr) => {
-                            return Math.abs(curr.date - mouseDate) < Math.abs(prev.date - mouseDate) ? curr : prev;
-                        });
+                    .attr("d", lineDeaths);
 
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`Date: ${d3.timeFormat("%Y-%m-%d")(closestData.date)}<br>Cases: ${closestData.cases}<br>Deaths: ${closestData.deaths}`)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    });
-
-                // Add X and Y axes
                 svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x));
+                    .call(d3.axisBottom(x).ticks(5).tickFormat(d3.timeFormat("%b %d")));
 
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .call(d3.axisLeft(y));
+                    .call(d3.axisLeft(y).ticks(10));
 
-                // Add a legend
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", -margin.top / 2)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "16px")
+                    .text("Total Cases and Deaths Over Time");
+
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom / 2)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "14px")
+                    .text("Date");
+
+                svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 0 - margin.left)
+                    .attr("x", 0 - (height / 2))
+                    .attr("dy", "1em")
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "14px")
+                    .text("Count");
+
+                // Add legend
                 const legend = svg.append("g")
                     .attr("class", "legend")
-                    .attr("transform", `translate(${width - 150},10)`);
+                    .attr("x", width - 100)
+                    .attr("y", 50)
+                    .attr("height", 100)
+                    .attr("width", 100);
 
                 legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
                     .attr("width", 20)
                     .attr("height", 20)
                     .style("fill", "#1f77b4");
+
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 15)
-                    .text("Cases");
+                    .text("Cases")
+                    .style("font-size", "12px");
 
                 legend.append("rect")
+                    .attr("x", 0)
                     .attr("y", 30)
                     .attr("width", 20)
                     .attr("height", 20)
                     .style("fill", "#ff7f0e");
+
                 legend.append("text")
                     .attr("x", 30)
                     .attr("y", 45)
-                    .text("Deaths");
+                    .text("Deaths")
+                    .style("font-size", "12px");
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
-            }   
-            else if (slideNumber === 3) {
-                // Render Bar Graph for Cases and Deaths per State
 
-                // Extract and sort unique states alphabetically
-                const statesSorted = Array.from(new Set(data.map(d => d.state))).sort();
+            } else if (slideNumber === 3) {
+                const states = Array.from(new Set(data.map(d => d.state))).sort();
 
-                // Create x and y scales
                 const x = d3.scaleBand()
-                    .domain(statesSorted)  // Use the sorted states for the x-axis
+                    .domain(states)
                     .range([0, width])
                     .padding(0.1);
 
-                const y = d3.scaleLog()
-                    .domain([1, d3.max(data, d => Math.max(d.cases, d.deaths))])
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => Math.max(d.cases, d.deaths))])
                     .nice()
                     .range([height, 0]);
 
-                // Render bars for cases
-                svg.selectAll(".bar-cases")
-                    .data(data)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.state))
-                    .attr("y", d => y(d.cases))
-                    .attr("width", x.bandwidth() / 2)
-                    .attr("height", d => height - y(d.cases))
-                    .style("fill", "steelblue")
-                    .on("mouseover", function(event, d) {
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    });
-
-                // Render bars for deaths
-                svg.selectAll(".bar-deaths")
-                    .data(data)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.state) + x.bandwidth() / 2)
-                    .attr("y", d => y(d.deaths))
-                    .attr("width", x.bandwidth() / 2)
-                    .attr("height", d => height - y(d.deaths))
-                    .style("fill", "orange")
-                    .on("mouseover", function(event, d) {
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    });
-
-                // Add X and Y axes
-                svg.append("g")
+                const xAxis = svg.append("g")
                     .attr("class", "x-axis")
                     .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x))
-                    .selectAll("text")
+                    .call(d3.axisBottom(x).tickSize(0).tickFormat(d => d));
+
+                xAxis.selectAll("text")
                     .attr("transform", "rotate(-45)")
                     .style("text-anchor", "end");
 
                 svg.append("g")
                     .attr("class", "y-axis")
-                    .call(d3.axisLeft(y));
+                    .call(d3.axisLeft(y).ticks(10));
+
+                const bars = svg.selectAll(".bar")
+                    .data(data)
+                    .enter().append("g");
+
+                bars.append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.state))
+                    .attr("y", d => y(d.cases))
+                    .attr("width", x.bandwidth() / 2)
+                    .attr("height", d => height - y(d.cases))
+                    .style("fill", "steelblue");
+
+                bars.append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.state) + x.bandwidth() / 2)
+                    .attr("y", d => y(d.deaths))
+                    .attr("width", x.bandwidth() / 2)
+                    .attr("height", d => height - y(d.deaths))
+                    .style("fill", "orange");
+
+                // Add tooltip
+                bars.on("mouseover", function(event, d) {
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`State: ${d.state}<br>Cases: ${d.cases}<br>Deaths: ${d.deaths}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("opacity", 0);
+                });
 
                 d3.select("#graphDescriptionText").text(yAxisLabels[slideNumber - 1]);
             }
-
-
-        function updateState() {
-            const selectedState = document.getElementById("stateDropdown").value;
-            d3.csv(dataURL).then(function(csvData) {
-                data = csvData.filter(d => d.state === selectedState || selectedState === "");
-                data.forEach(d => {
-                    d.date = new Date(d.date);
-                    d.cases = +d.cases;
-                    d.deaths = +d.deaths;
-                });
-                renderSlide(currentSlide);
-            });
         }
 
         function changeSlide(slideNumber) {
@@ -424,6 +400,12 @@
 
         function nextSlide() {
             currentSlide = (currentSlide % 3) + 1;
+            renderSlide(currentSlide);
+        }
+
+        function updateState() {
+            const selectedState = d3.select("#stateDropdown").property("value");
+            d3.select("#myData svg").remove();
             renderSlide(currentSlide);
         }
     </script>
