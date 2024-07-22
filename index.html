@@ -77,6 +77,32 @@
             width: 20px;
             height: 20px;
         }
+        .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px 0;
+        font-size: 16px;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        background-color: #007BFF;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button:active {
+            background-color: #004494;
+        }
+
+        .button:focus {
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -85,9 +111,10 @@
         <div class="pagination">
             <ul id="mainMenu">
                 <li><a href="#" id="Slide1" onclick="changeSlide(1)">Nationwide Overview</a></li>
-                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases Over Time</a></li>
+                <li><a href="#" id="Slide2" onclick="changeSlide(2)">Cases
+                and Deaths Over Time</a></li>
                 <li><a href="#" id="Slide3" onclick="changeSlide(3)">Detailed State Comparison</a></li>
-                <li><a href="#" id="buttonNext" onclick="nextSlide()">Next Scene</a></li>
+                <li><a href="#" id="buttonNext" class = "button" onclick="nextSlide()">Next Scene</a></li>
             </ul>
         </div>
         <select id="stateDropdown" onchange="updateState()">
@@ -114,7 +141,7 @@
         ];
         const yAxisLabels = [
             "Heatmap of Cases",
-            "Total Cases Over Time",
+            "Total Cases and Deaths Over Time",
             "Detailed State Comparison"
         ];
         const xAxisLabel = "Date";
