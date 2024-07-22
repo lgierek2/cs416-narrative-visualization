@@ -236,6 +236,7 @@
                     .datum(data)
                     .attr("class", "line line-cases")
                     .attr("d", lineCases)
+                    .style("stroke", "blue")
                     .on("mouseover", function(event, d) {
                         // No need to show tooltip on mouseover, handled by mousemove
                     })
@@ -257,6 +258,7 @@
                     .datum(data)
                     .attr("class", "line line-deaths")
                     .attr("d", lineDeaths)
+                    .style("stroke", "red")
                     .on("mouseover", function(event, d) {
                         // No need to show tooltip on mouseover, handled by mousemove
                     })
