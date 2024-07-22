@@ -113,8 +113,8 @@ function renderSlide(slideNumber) {
                 .text(`Highest Cases in ${highestCasesState.state}`); 
 
             svg.append("text")
-                .attr("x", width + 50)
-                .attr("y", 200)
+                .attr("x", width)
+                .attr("y", 10)
                 .style("font-size", "12px")
                 .text("Darker shades represent higher case numbers");
 
@@ -252,7 +252,7 @@ function renderSlide(slideNumber) {
             .style("font-size", "12px")
             .text("U.S. declares National Emergency - March 2020");
 
-            svg.append("line")
+        svg.append("line")
             .attr("x1", x(new Date('2020-12-24')))
             .attr("x2", x(new Date('2020-12-24')))
             .attr("y1", 0)
