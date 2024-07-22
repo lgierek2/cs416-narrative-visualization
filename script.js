@@ -114,7 +114,7 @@ function renderSlide(slideNumber) {
                 .text(`Highest Cases in ${highestCasesState.state}`);  
 
             svg.append("text")
-                .attr("x", 0)
+                .attr("x", 1825)
                 .attr("y", 0)
                 .style("font-size", "12px")
                 .text("Darker shades represent higher case numbers");
