@@ -21,7 +21,7 @@
 </head>
 <body>
     <h1>COVID-19 Heatmap by State</h1>
-    <svg id="heatmap" width="1000" height="600"></svg>
+    <svg id="heatmap" width="1200" height="600"></svg>
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -29,7 +29,7 @@
         const dataURL = "https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization/main/us-states.csv";
 
         const margin = { top: 50, right: 50, bottom: 100, left: 150 };
-        const width = 1000 - margin.left - margin.right;
+        const width = 1200 - margin.left - margin.right;
         const height = 600 - margin.top - margin.bottom;
 
         const svg = d3.select("#heatmap")
@@ -40,13 +40,14 @@
 
         // Load and process data
         d3.csv(dataURL).then(function(data) {
-            // Filter data if necessary (e.g., sum cases or deaths if needed)
+            // Convert data to numbers
             const stateData = data.map(d => ({
                 state: d.state,
                 cases: +d.cases // or use 'deaths' if that's your metric
             }));
 
-            const states = stateData.map(d => d.state);
+            // Extract unique states
+            const states = Array.from(new Set(stateData.map(d => d.state)));
             const maxCases = d3.max(stateData, d => d.cases);
 
             // Define scales
@@ -54,6 +55,10 @@
                 .domain(states)
                 .range([0, width])
                 .padding(0.1);
+
+            const y = d3.scaleBand()
+                .domain([0]) // Single row since we're only showing states horizontally
+                .range([height, 0]);
 
             const color = d3.scaleSequential(d3.interpolateReds)
                 .domain([0, maxCases]);
@@ -66,7 +71,7 @@
                 .attr("x", d => x(d.state))
                 .attr("y", 0)
                 .attr("width", x.bandwidth())
-                .attr("height", height)
+                .attr("height", y.bandwidth())
                 .attr("fill", d => color(d.cases));
 
             // Add x-axis
