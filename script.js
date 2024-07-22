@@ -104,6 +104,8 @@ function renderSlide(slideNumber) {
                 .text("Number of Cases");
             
             const highestCasesState = data.reduce((max, d) => d.cases > max.cases ? d : max, data[0]);
+            const lowestCasesState = data.reduce((min, d) => d.cases > min.cases ? d : min, data[0]);
+
             svg.append("text")
                 .attr("x", x(highestCasesState.state) + x.bandwidth() / 2)
                 .attr("y", y("Cases") - 10)
@@ -111,6 +113,14 @@ function renderSlide(slideNumber) {
                 .style("font-size", "12px")
                 .style("font-weight", "bold")
                 .text(`Highest Cases in ${highestCasesState.state}`); 
+            
+            svg.append("text")
+                .attr("x", x(lowestCasesState.state) + x.bandwidth() / 2)
+                .attr("y", y("Cases") - 10)
+                .attr("text-anchor", "middle")
+                .style("font-size", "12px")
+                .style("font-weight", "bold")
+                .text(`Highest Cases in ${lowestCasesState.state}`); 
 
             svg.append("text")
                 .attr("x", width)
