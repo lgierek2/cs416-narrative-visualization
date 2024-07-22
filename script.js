@@ -10,16 +10,6 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
     });
 
     let currentScene = 0;
-    // Get unique states
-    const states = Array.from(new Set(data.map(d => d.state)));
-
-    // Populate the dropdown with state options
-    const stateFilter = d3.select("#stateFilter");
-    stateFilter.selectAll("option")
-        .data(states)
-        .enter().append("option")
-        .attr("value", d => d)
-        .text(d => d);
 
     // Define scenes
     const scenes = [
@@ -55,12 +45,6 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         }
     });
 
-    document.getElementById("stateFilter").addEventListener("change", () => {
-        if (currentScene === 2) { // Update only when on the comparison scene
-            renderComparison(data);
-        }
-    });
-
     function renderScene() {
         // Clear the visualization area
         d3.select("#visualization").html("");
@@ -70,8 +54,6 @@ d3.csv("https://raw.githubusercontent.com/lgierek2/cs416-narrative-visualization
         document.getElementById("prevButton").style.display = currentScene === 0 ? "none" : "inline";
         document.getElementById("nextButton").style.display = currentScene === scenes.length - 1 ? "none" : "inline";
         // Show/hide dropdown based on scene
-        document.getElementById("stateFilter").style.display = currentScene === 2 ? "inline" : "none";
-        // Add title
         d3.select("#visualization")
             .append("h2")
             .text(scenes[currentScene].title);
